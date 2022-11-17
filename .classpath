@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="service_client_common_webservice_src"/>
+	<classpathentry kind="src" path="omni_webservices_resources"/>
+	<classpathentry kind="src" path="omni_services_common_src"/>
+	<classpathentry kind="src" path="resources_omni_services"/>
+	<classpathentry kind="src" path="omni_services_common_resources"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="library_src"/>
+	<classpathentry kind="src" path="service_client_common_resources"/>
+	<classpathentry excluding="**/.svn/**" kind="src" path="services_common"/>
+	<classpathentry excluding="**/.svn/**|com/path/dbmaps/vo/FMSAPPLIMITDETVO.java|com/path/dbmaps/vo/FMSFACILITYTYPEVO.java|com/path/dbmaps/vo/TFSCTRL1VO.java|com/path/dbmaps/vo/SWIFT_HISTORYVO.java|com/path/dbmaps/vo/SWIFT_MSGDETVO.java|com/path/dbmaps/vo/SWIFT_MSGMODVO.java" kind="src" path="service_client_common_src"/>
+	<classpathentry kind="src" path="library_src_ext"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk-11.0.15">
+		<attributes>
+			<attribute name="module" value="true"/>
+			<attribute name="owner.project.facets" value="java"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v9.0"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
+	<classpathentry kind="output" path="WebContent/WEB-INF/classes"/>
+</classpath>

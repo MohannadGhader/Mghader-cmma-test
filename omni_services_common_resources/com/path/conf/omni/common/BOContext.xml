@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:task="http://www.springframework.org/schema/task"
+
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	 http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	  http://www.springframework.org/schema/task
+	http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+
+
+	<!-- <bean id="omniBaseBO" parent="baseBO" abstract="true"> <property name="omniCommonBO" 
+		ref="omniCommonBO"></property> </bean> -->
+	<bean id="omniBaseBO" abstract="true">
+		<property name="omniCommonBO" ref="omniCommonBO"></property>
+		<property name="omniDriverBO" ref="omniDriverBO"></property>
+		<property name="omniClientBO" ref="omniClientBO"></property>
+		<property name="omniAdminBO" ref="omniAdminBO"></property>
+	</bean>
+
+	<bean id="omniCommonBO" factory-bean="omniServiceBeanFactory"
+		factory-method="getInstance" parent="omniBaseBO">
+		<constructor-arg name="implClassName"
+			value="com.path.bo.omni.common.impl.OmniCommonBOImpl" />
+		<constructor-arg name="interfaceName"
+			value="com.path.bo.omni.common.OmniCommonBO" />
+		<constructor-arg name="remoteServiceName"
+			value="omniCommonBOService" />
+		<property name="omniCommonPullDAO" ref="omniCommonPullDAO"></property>
+		<property name="omniCommonPushDAO" ref="omniCommonPushDAO"></property>
+	</bean>
+
+	<bean id="omniDriverBO" factory-bean="omniServiceBeanFactory"
+		factory-method="getInstance" parent="omniBaseBO">
+		<constructor-arg name="implClassName"
+			value="com.path.bo.omni.driver.impl.OmniDriverBOImpl" />
+		<constructor-arg name="interfaceName"
+			value="com.path.bo.omni.driver.OmniDriverBO" />
+		<constructor-arg name="remoteServiceName"
+			value="omniCommonBOService" />
+		<property name="omniDriverPullDAO" ref="omniDriverPullDAO"></property>
+		<property name="omniDriverPushDAO" ref="omniDriverPushDAO"></property>
+		<property name="omniCommonBO" ref="omniCommonBO"></property>
+		<property name="omniCommonPushDAO" ref="omniCommonPushDAO"></property>
+		<property name="omniCommonPullDAO" ref="omniCommonPullDAO"></property>
+	</bean>
+
+
+	<bean id="omniClientBO" factory-bean="omniServiceBeanFactory"
+		factory-method="getInstance" parent="omniBaseBO">
+		<constructor-arg name="implClassName"
+			value="com.path.bo.omni.client.impl.OmniClientBOImpl" />
+		<constructor-arg name="interfaceName"
+			value="com.path.bo.omni.client.OmniClientBO" />
+		<constructor-arg name="remoteServiceName"
+			value="omniCommonBOService" />
+		<property name="omniClientPullDAO" ref="omniClientPullDAO"></property>
+		<property name="omniClientPushDAO" ref="omniClientPushDAO"></property>
+		<property name="omniCommonBO" ref="omniCommonBO"></property>
+		<property name="omniCommonPushDAO" ref="omniCommonPushDAO"></property>
+		<property name="omniCommonPullDAO" ref="omniCommonPullDAO"></property>
+	</bean>
+
+	<bean id="omniAdminBO" factory-bean="omniServiceBeanFactory"
+		factory-method="getInstance" parent="omniBaseBO">
+		<constructor-arg name="implClassName"
+			value="com.path.bo.omni.admin.impl.OmniAdminBOImpl" />
+		<constructor-arg name="interfaceName"
+			value="com.path.bo.omni.admin.OmniAdminBO" />
+		<constructor-arg name="remoteServiceName"
+			value="omniCommonBOService" />
+		<property name="omniAdminPullDAO" ref="omniAdminPullDAO"></property>
+		<property name="omniAdminPushDAO" ref="omniAdminPushDAO"></property>
+		<property name="omniCommonBO" ref="omniCommonBO"></property>
+		<property name="omniCommonPushDAO" ref="omniCommonPushDAO"></property>
+		<property name="omniCommonPullDAO" ref="omniCommonPullDAO"></property>
+	</bean>
+
+	<bean id="channelLoginBO" factory-bean="omniServiceBeanFactory"
+		factory-method="getInstance" parent="omniBaseBO">
+		<constructor-arg name="implClassName"
+			value="com.path.bo.omni.common.impl.ChannelLoginBOImpl" />
+		<constructor-arg name="interfaceName"
+			value="com.path.bo.omni.common.ChannelLoginBO" />
+		<constructor-arg name="remoteServiceName"
+			value="channelLoginBOService" />
+		<property name="omniCommonPullDAO" ref="omniCommonPullDAO"></property>
+
+	</bean>
+
+<!-- 	<task:scheduled-tasks scheduler="myScheduler"> -->
+<!-- 	<task:scheduled ref="omniDriverBO" method="checkingDriverLocation" -->
+<!-- 	fixed-delay="5000" /> -->
+
+<!-- 	</task:scheduled-tasks> -->
+<!-- 	<task:scheduler id="myScheduler" /> -->
+	
+<!-- 	task scheduling for @Scheduled annotation -->
+<!-- 	<task:annotation-driven executor="myExecutor" -->
+<!-- 		scheduler="myScheduler" /> -->
+<!-- 	<task:executor id="myExecutor" pool-size="2" /> -->
+
+<!-- 	<bean id="myScheduler" -->
+<!-- 		class="org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler"> -->
+<!-- 		<property name="poolSize" value="2" /> -->
+<!-- 		<property name="threadNamePrefix" value="myScheduler-" /> -->
+<!-- 		<property name="waitForTasksToCompleteOnShutdown" -->
+<!-- 			value="false" /> -->
+<!-- 		<property name="daemon" value="true" /> -->
+<!-- 	</bean> -->
+
+</beans>

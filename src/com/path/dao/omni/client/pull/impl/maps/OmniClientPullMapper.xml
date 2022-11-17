@@ -1,0 +1,1115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="omniClientPullMapper">
+
+	<resultMap id="appChnlMap"
+		type="com.path.dbmaps.vo.OC_APP_CHNLVO">
+		<result property="STATUS" column="STATUS" />
+	</resultMap>
+
+	<select id="returnAppChnlVO" parameterType="omniBaseSC"
+		resultMap="appChnlMap">
+		SELECT OPC.*
+		FROM oc_app_chnl OPC
+		WHERE OPC.APP_ID =
+		#{appId,jdbcType=NUMERIC}
+		AND OPC.CHNL_ID =
+		#{channelId,jdbcType=NUMERIC}
+		AND OPC.COMP_CODE =
+		#{compCode,jdbcType=NUMERIC}
+	</select>
+
+
+	<resultMap id="simMap" type="com.path.dbmaps.vo.SimVO">
+		<result property="sim_serial" column="sim_serial" />
+	</resultMap>
+
+	<select id="returnSimVO"
+		parameterType="com.path.dbmaps.vo.ClientCO" resultMap="simMap">
+		SELECT *
+		FROM sim
+		WHERE mobile_number =
+		#{mobile_number,jdbcType=VARCHAR}
+
+	</select>
+
+	<select id="returnSimSerial"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.SimVO">
+		SELECT sim_id FROM sim WHERE
+		sim_serial=#{sim_serial,jdbcType=NUMERIC}
+	</select>
+
+
+	<resultMap id="deviceMap" type="com.path.dbmaps.vo.DeviceVO">
+		<result property="device_UUID" column="device_UUID" />
+	</resultMap>
+
+	<select id="returnCombinationUsernameDevice"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientDeviceCO">
+		SELECT csd.client_status , c.username FROM client_device
+		csd , client c
+		WHERE csd.client_id = c.client_id and
+		csd.client_id =
+		#{client_id,jdbcType=NUMERIC}
+		AND
+		csd.device_id =
+		(SELECT
+		device_id
+		FROM
+		device where device_UUID =
+		#{device_UUID,jdbcType=NUMERIC})
+
+	</select>
+
+	<select id="returnUsernameExists"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="java.lang.Integer">
+		select exists (select client_id from client where username=
+		#{username,jdbcType=NUMERIC} )
+	</select>
+
+	<select id="returnCombination"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.Client_deviceVO">
+		SELECT client_id , client_status FROM client_device csd
+		WHERE
+		csd.device_id = (SELECT
+		device_id
+		FROM
+		device where device_UUID =
+		#{device_UUID,jdbcType=NUMERIC})
+		and csd.client_id =
+		(SELECT client_id
+		from client where
+		username = #{username,jdbcType=VARCHAR})
+
+	</select>
+
+	<select id="returnUsernamePassword"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientVO">
+		SELECT client_id ,password , salt FROM client WHERE
+		username=
+		#{username,jdbcType=VARCHAR}
+	</select>
+
+
+	<select id="returnUsername"
+		parameterType="com.path.dbmaps.vo.ClientVO"
+		resultType="com.path.dbmaps.vo.ClientVO">
+		SELECT client_id FROM client WHERE username=
+		#{username,jdbcType=VARCHAR}
+	</select>
+
+
+	<resultMap id="returnListAvailableMachinesNearestMostFarMap"
+		type="com.path.dbmaps.vo.Machine_driverCO">
+		<result property="machine_driver_id" column="machine_driver_id" />
+		<result property="plate_number" column="plate_number" />
+		<result property="driver_mobile_number" column="mobile_number" />
+		<result property="driver_name" column="name" />
+		<result property="driver_profile" column="profile" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="ar_name" column="ar_name" />
+	</resultMap>
+
+	<select id="returnListAvailableMachinesNearestMostFar"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultMap="returnListAvailableMachinesNearestMostFarMap">
+		SELECT md.machine_driver_id ,d.driver_id, d.name , d.ar_name,
+		d.mobile_number,m.plate_number, d.profile,
+		<if test="reservation_type == 0">
+			time_format( (SEC_TO_TIME(((ST_Distance_Sphere(
+			point(#{longitude_from,jdbcType=NUMERIC},
+			#{latitude_from,jdbcType=NUMERIC}),
+			point(md.longitude, md.latitude)
+			)
+			/1000 ) / #{velocity,jdbcType=NUMERIC})*60*60))
+			,"%H:%i:00" ) as
+			timeToReachClient,
+		</if>
+		<if test="reservation_type == 1">
+			time_format( addtime(#{time,jdbcType=TIMESTAMP},
+			(SEC_TO_TIME(((ST_Distance_Sphere(
+			point(#{longitude_from,jdbcType=NUMERIC},
+			#{latitude_from,jdbcType=NUMERIC}),
+			point(md.longitude, md.latitude)
+			)
+			/1000 ) / #{velocity,jdbcType=NUMERIC})*60*60))) ,"%H:%i:00" ) as
+			timeToReachClient,
+		</if>
+		(((ST_Distance_Sphere(
+		point(#{longitude_from,jdbcType=NUMERIC},
+		#{latitude_from,jdbcType=NUMERIC}),
+		point(md.longitude, md.latitude)
+		)
+		/1000 ) / #{velocity,jdbcType=NUMERIC})*60*60) as timeInSec
+		FROM
+		machine_driver
+		md , machine m , driver d where
+		<if test="occurrence_type == 0">
+			md.machine_driver_status
+			= 0 and
+		</if>
+		md.machine_id = m.machine_id and
+		md.driver_id = d.driver_id
+
+		and
+		md.machine_driver_id not in
+		(select machine_driver_id from
+		reservation_list where date =
+		#{date,jdbcType=TIMESTAMP}
+		and time >
+		#{time,jdbcType=TIMESTAMP} and
+		time <![CDATA[ <= ]]>
+		addtime(#{time,jdbcType=TIMESTAMP},'00:30:00')
+		or (time <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP} and time_slot >
+		addtime(#{time,jdbcType=TIMESTAMP},'00:05:00') )
+		and
+		(reservation_list_status = 0
+		or reservation_list_status =1
+		or
+		reservation_list_status =2
+		or reservation_list_status =3
+		or
+		reservation_list_status =6
+
+		))
+
+		and md.driver_id = d.driver_id and
+		d.driver_id in (select driver_id from
+		driver_device )
+
+
+	</select>
+
+	<resultMap
+		id="returnListUnAvailableMachinesNearestMostFarMap"
+		type="com.path.dbmaps.vo.Machine_driverCO">
+		<result property="machine_driver_id" column="machine_driver_id" />
+		<result property="machine_id" column="machine_id" />
+		<result property="driver_id" column="driver_id" />
+		<result property="plate_number" column="plate_number" />
+		<result property="driver_mobile_number" column="mobile_number" />
+		<result property="driver_name" column="name" />
+		<result property="driver_profile" column="profile" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="timeInSec" column="timeInSec" />
+		<result property="ar_name" column="ar_name" />
+	</resultMap>
+
+	<select id="returnListUnavailableMachines"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultMap="returnListUnAvailableMachinesNearestMostFarMap">
+		select md.machine_driver_id,d.name , d.profile, d.mobile_number
+		,d.ar_name,
+		<!-- <if test="reservation_type == 0"> -->
+		time_format(addtime(
+		rl.time_slot,
+		#{timeFromDestinationToClient,jdbcType=TIMESTAMP}) ,"%H:%i:00") as
+		timeToReachClient
+		<!-- </if> -->
+		<!-- <if test="reservation_type == 1"> -->
+		<!-- time_format(addtime(#{time,jdbcType=TIMESTAMP}, addtime -->
+		<!-- ((subtime(rl.time_slot,#{time,jdbcType=TIMESTAMP})), -->
+		<!-- (SEC_TO_TIME(((ST_Distance_Sphere( -->
+		<!-- point(#{longitude_from,jdbcType=NUMERIC},#{latitude_from,jdbcType=NUMERIC}), -->
+		<!-- point(r.longitude_to, r.latitude_to) -->
+		<!-- ) /1000 ) / -->
+		<!-- #{velocity,jdbcType=NUMERIC})*60*60)))),"%H:%i:00") as -->
+		<!-- timeToReachClient , -->
+		<!-- </if> -->
+		<!-- (((ST_Distance_Sphere( -->
+		<!-- point(#{longitude_from,jdbcType=NUMERIC}, -->
+		<!-- #{latitude_from,jdbcType=NUMERIC}), -->
+		<!-- point(r.longitude_to, -->
+		<!-- r.latitude_to) -->
+		<!-- ) /1000 ) / #{velocity,jdbcType=NUMERIC})*60*60) as -->
+		<!-- timeInSec -->
+		from machine_driver md , reservation r , reservation_list rl
+		, driver d
+		where md.machine_driver_status = 1
+		and md.driver_id =
+		d.driver_id
+		and
+		r.reservation_id = rl.reservation_id
+		and
+		md.machine_driver_id =
+		rl.machine_driver_id
+		and rl.date =
+		#{date,jdbcType=TIMESTAMP} and
+		rl.time_slot>
+		#{time,jdbcType=TIMESTAMP}
+		and
+		md.machine_driver_id not in
+		(select
+		machine_driver_id from reservation_list where date =
+		#{date,jdbcType=TIMESTAMP}
+		and time > #{time,jdbcType=TIMESTAMP} and
+		time <![CDATA[ <= ]]>
+		addtime(#{time,jdbcType=TIMESTAMP},'00:30:00')
+		or (time <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP} and time_slot >
+		addtime(#{time,jdbcType=TIMESTAMP},'00:05:00') ))
+
+	</select>
+	<select id="returnClientInfo"
+		parameterType="com.path.dbmaps.vo.ClientVO"
+		resultType="com.path.dbmaps.vo.ClientVO">
+		SELECT username ,profile , gender , last_login_client , free_trip FROM
+		client WHERE
+		client_id =
+		#{client_id,jdbcType=NUMERIC}
+
+	</select>
+
+
+
+	<select id="returnUsernamePasswordById"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientVO">
+		SELECT * from client WHERE
+		client_id
+		=#{client_id,jdbcType=NUMERIC}
+	</select>
+
+	<resultMap id="returnReservationsListMap"
+		type="com.path.dbmaps.vo.ReservationSC">
+		<result column="reservation_id" property="reservation_id" />
+		<result column="reservation_list_id"
+			property="reservation_list_id" />
+		<result column="plate_number" property="plate_number" />
+		<result column="name" property="driver_name" />
+		<result column="ar_name" property="ar_name" />
+		<result column="mobile_number" property="driver_mobile_number" />
+		<result column="profile" property="driver_profile" />
+		<result column="date" property="date" />
+		<result column="time" property="time" />
+		<result column="reservation_list_status"
+			property="reservation_list_status" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="distance" column="distance" />
+		<result property="occurrence_type" column="occurrence_type" />
+		<result property="latitude_from" column="latitude_from" />
+		<result property="logitude_from" column="logitude_from" />
+
+
+	</resultMap>
+
+	<select id="returnReservationsList"
+		parameterType="com.path.dbmaps.vo.ReservationVO"
+		resultMap="returnReservationsListMap">
+		SELECT r.reservation_id , r.occurrence_type , r.reservation_type , rl.reservation_list_id ,
+		d.name ,d.ar_name,
+		d.mobile_number , d.profile ,
+		m.plate_number ,
+		rl.date, rl.time , r.longitude_from , r.latitude_from,
+		rl.reservation_list_status , rl.reservation_time_status , r.eventName
+		, r.destination_name ,
+		rl.costOfTripWithDestination
+		
+		<!-- <if test="filterDate == null "> -->
+		<!-- , -->
+		<!-- (ST_Distance_Sphere( -->
+		<!-- point(#{longitude_from,jdbcType=NUMERIC}, -->
+		<!-- #{latitude_from,jdbcType=NUMERIC}), -->
+		<!-- point(md.longitude, md.latitude) -->
+		<!-- ) -->
+		<!-- /1000 ) as distance -->
+
+		<!-- </if> -->
+		FROM reservation r , reservation_list rl ,
+		machine_driver md , driver d
+		,
+		machine m
+		WHERE
+		r.reservation_id = rl.reservation_id
+		and
+		rl.machine_driver_id = md.machine_driver_id
+		and md.driver_id =
+		d.driver_id
+		and md.machine_id = m.machine_id and
+		r.client_id
+		=#{client_id,jdbcType=NUMERIC}
+		and reservation_type <![CDATA[ <>]]>2
+		<!-- <if test="filterDate != null "> -->
+		<if test="reservation_id != 0 ">
+			and rl.reservation_id= #{reservation_id,jdbcType=NUMERIC}
+		</if>
+		<if test=" date != null">
+			and rl.date=#{date,jdbcType=TIMESTAMP}
+			<!-- </if> -->
+			<if test="time != null ">
+				and rl.time =
+				#{time,jdbcType=TIMESTAMP}
+			</if>
+		</if>
+		order by rl.date desc,
+		rl.time desc
+		<if test="reservation_id == 0 ">
+			limit #{limit,jdbcType=NUMERIC}
+		</if>
+	</select>
+
+
+	<select id="returnListOfDestination"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultType="com.path.dbmaps.vo.ReservationCO">
+		select * from reservation where client_id =
+		#{client_id,jdbcType=NUMERIC}
+		and destination_name is not null
+	</select>
+
+	<select id="returnLastReservations"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultType="com.path.dbmaps.vo.ReservationCO">
+		select rl.reservation_list_status , rl.reservation_list_id
+		from
+		reservation_list rl , reservation r where r.client_id =
+		#{client_id,jdbcType=NUMERIC}
+		and rl.date = #{date,jdbcType=TIMESTAMP}
+		and r.reservation_id = rl.reservation_id
+		<!-- and rl.reservation_list_status = 0 -->
+		order by reservation_list_id desc
+		limit #{counter,jdbcType=NUMERIC}
+	</select>
+
+
+
+	<select id="returnMobileNumber"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientVO">
+		SELECT mobile_number FROM client WHERE
+		username=
+		#{username,jdbcType=VARCHAR}
+	</select>
+
+
+<select id="returnMobileNumberById"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientVO">
+		SELECT mobile_number FROM client WHERE
+		client_id=
+		#{client_id,jdbcType=VARCHAR}
+	</select>
+
+	<select id="returnListDevices"
+		parameterType="com.path.dbmaps.vo.ClientVO"
+		resultType="com.path.dbmaps.vo.ClientCO">
+		SELECT d.device_id, d.device_UUID , d.device_name
+		,cd.last_login , d.device_manufacturer
+		,cd.client_status from device d
+		, client_device cd
+		WHERE
+		cd.client_id =
+		#{client_id,jdbcType=VARCHAR}
+		and
+		d.device_id =
+		cd.device_id
+	</select>
+
+	<select id="returnLastLogin"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientCO">
+		SELECT last_login_client FROM client WHERE client_id =
+		#{client_id,jdbcType=NUMERIC}
+	</select>
+
+	<!-- return the reservation of yesterday when the status is not 4 (the reservation 
+		is expired ) -->
+
+<!-- 	<select id="returnOldReservations" -->
+<!-- 		parameterType="com.path.dbmaps.vo.ReservationCO" -->
+<!-- 		resultType="com.path.dbmaps.vo.ReservationListVO"> -->
+<!-- 		select rl.reservation_list_id , machine_driver_id from -->
+<!-- 		reservation_list rl -->
+<!-- 		where -->
+<!-- 		rl.date <![CDATA[ <]]> -->
+<!-- 		#{date,jdbcType=TIMESTAMP} -->
+
+<!-- 		and (rl.reservation_list_status = 0 -->
+<!-- 		or rl.reservation_list_status = 1 -->
+<!-- 		or rl.reservation_list_status = 2 -->
+<!-- 		or rl.reservation_list_status = 3 -->
+<!-- 		) -->
+<!-- 	</select> -->
+
+
+	<!-- return the reservations that still pending to expire it -->
+<!-- 	<select id="returnOldReservationsToday" -->
+<!-- 		parameterType="com.path.dbmaps.vo.ReservationCO" -->
+<!-- 		resultType="com.path.dbmaps.vo.ReservationListVO"> -->
+<!-- 		select * from reservation_list -->
+<!-- 		where date = #{date,jdbcType=TIMESTAMP} -->
+<!-- 		and reservation_list_status = 0 and -->
+<!-- 		(select -->
+<!-- 		(addtime(time,#{timeToExpire,jdbcType=TIMESTAMP} )) -->
+<!-- 				 <![CDATA[ <]]> -->
+<!-- 		#{time,jdbcType=TIMESTAMP}) -->
+<!-- 	</select> -->
+
+
+
+	<!-- return the number of cancelation per day -->
+	<select id="returnNumberOfCancelation"
+		parameterType="com.path.dbmaps.vo.ReservationCO" resultType="int">
+		select
+		count(*) from reservation r, reservation_list rl
+		where r.client_id =
+		#{client_id,jdbcType=NUMERIC}
+		and rl.date =#{date,jdbcType=TIMESTAMP}
+		and r.reservation_id = rl.reservation_id
+		and rl.reservation_list_status
+		=
+		#{reservation_list_status,jdbcType=NUMERIC}
+	</select>
+
+	<resultMap id="returnListDriverMap"
+		type="com.path.dbmaps.vo.Machine_driverCO">
+		<result property="machine_driver_id" column="machine_driver_id" />
+		<result property="machine_id" column="machine_id" />
+		<result property="driver_id" column="driver_id" />
+		<result property="plate_number" column="plate_number" />
+		<result property="driver_mobile_number" column="mobile_number" />
+		<result property="driver_name" column="name" />
+		<result property="driver_profile" column="profile" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="timeInSec" column="timeInSec" />
+		<result property="timeInSec" column="timeInSec" />
+		<result property="ar_name" column="ar_name" />
+	</resultMap>
+
+	<select id="returnListDriver"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultMap="returnListDriverMap">
+		select md.machine_driver_id , d.name , d.mobile_number , d.ar_name ,
+		d.profile , m.plate_number
+		<!-- , -->
+		<!-- <if test="reservation_type == 0"> -->
+		<!-- time_format( (SEC_TO_TIME(((ST_Distance_Sphere( -->
+		<!-- point(#{longitude_from,jdbcType=NUMERIC}, -->
+		<!-- #{latitude_from,jdbcType=NUMERIC}), -->
+		<!-- point(md.longitude, md.latitude) -->
+		<!-- ) -->
+		<!-- /1000 ) / #{velocity,jdbcType=NUMERIC})*60*60)) ,"%H:%i:00" ) as -->
+		<!-- timeToReachClient -->
+		<!-- </if> -->
+
+		from machine_driver md ,driver d , machine m
+
+		where
+
+		md.machine_id =
+		m.machine_id
+		and md.driver_id = d.driver_id
+		and d.driver_id in (select
+		driver_id from driver_device )
+
+
+		and machine_driver_id in (select
+		machine_driver_id from working_hours
+		where
+		is_holiday= 1 and is_weekend
+		= 1
+		and
+		(select dayofweek( #{date,jdbcType=TIMESTAMP}) ) <![CDATA[ <> ]]>
+		weekend and
+		((select dayofweek( #{date,jdbcType=TIMESTAMP}) )between
+		start_day and
+		end_day)
+		and (#{time,jdbcType=TIMESTAMP} between
+		start_work_hour and
+		end_work_hour
+		and
+		#{time,jdbcType=TIMESTAMP} not
+		between start_break_hour and end_break_hour )
+
+		)
+		and
+		md.machine_driver_id
+		not in (
+		SELECT rl.machine_driver_id
+		FROM reservation_list rl
+		WHERE
+		rl.DATE = #{date,jdbcType=TIMESTAMP}
+		AND ((rl.TIME >=
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP})
+		OR (rl.TIME <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT >=
+		#{time,jdbcType=TIMESTAMP})
+		OR (rl.TIME <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT >=
+		#{time,jdbcType=TIMESTAMP})
+		OR (rl.TIME >= #{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT >= #{time,jdbcType=TIMESTAMP}
+		AND rl.TIME <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP})
+		)
+		<!-- and (rl.reservation_list_status = 0 -->
+		<!-- or rl.reservation_list_status = 1 -->
+		<!-- or rl.reservation_list_status = 2 -->
+		<!-- or rl.reservation_list_status = 3 -->
+		<!-- or rl.reservation_list_status = 6 -->
+		<!-- or rl.reservation_list_status = 7 -->
+		<!-- ) -->
+
+		)
+		<!-- and md.driver_id = d.driver_id -->
+
+		<!-- and md.machine_driver_status = 0 -->
+		<!-- <if test="reservation_type == 0"> -->
+		<!-- order by timeToReachClient asc </if> -->
+	</select>
+
+	<resultMap id="returnListAvailableDriverMap"
+		type="com.path.dbmaps.vo.Machine_driverCO">
+		<result property="machine_driver_id" column="machine_driver_id" />
+		<result property="machine_id" column="machine_id" />
+		<result property="driver_id" column="driver_id" />
+		<result property="plate_number" column="plate_number" />
+		<result property="driver_mobile_number" column="mobile_number" />
+		<result property="driver_name" column="name" />
+		<result property="driver_profile" column="profile" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="timeInSec" column="timeInSec" />
+		<result property="timeInSec" column="timeInSec" />
+		<result property="ar_name" column="ar_name" />
+		<result property="distance" column="distance" />
+	</resultMap>
+
+	<select id="returnListAvailableDriver"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultMap="returnListAvailableDriverMap">
+		select md.machine_driver_id , d.name , d.mobile_number , d.ar_name ,
+		d.profile , m.plate_number,
+		<!-- time_format( (SEC_TO_TIME(((ST_Distance_Sphere( -->
+		<!-- point(#{longitude_from,jdbcType=NUMERIC}, -->
+		<!-- #{latitude_from,jdbcType=NUMERIC}), -->
+		<!-- point(md.longitude, md.latitude) -->
+		<!-- ) -->
+		<!-- /1000 ) / #{velocity,jdbcType=NUMERIC})*60*60)) ,"%H:%i:00" ) as -->
+		<!-- timeToReachClient , -->
+		(ST_Distance_Sphere(
+		point(#{longitude_from,jdbcType=NUMERIC},
+		#{latitude_from,jdbcType=NUMERIC}),
+		point(md.longitude, md.latitude)
+		)
+		/1000 )as distance
+		from machine_driver md ,driver d , machine m
+		where
+		md.machine_id = m.machine_id
+		and md.driver_id = d.driver_id
+		and exists
+		(select driver_id from driver_device dd where dd.driver_id =
+		d.driver_id )
+
+		and machine_driver_id in (select machine_driver_id from
+		working_hours
+		where
+		is_holiday= 1 and is_weekend = 1
+		and
+		(select
+		dayofweek( #{date,jdbcType=TIMESTAMP}) ) <![CDATA[ <> ]]>
+		weekend and
+		((select dayofweek( #{date,jdbcType=TIMESTAMP}) )between
+		start_day and
+		end_day)
+		and ( #{time,jdbcType=TIMESTAMP} between
+		start_work_hour and
+		end_work_hour
+		and
+		#{time,jdbcType=TIMESTAMP} not
+		between start_break_hour and end_break_hour )
+
+		)
+		and
+		md.machine_driver_status = 0
+		order by distance asc
+
+		<!-- <if test="limit == 1"> -->
+		<!-- limit 1 -->
+		<!-- </if> -->
+	</select>
+
+
+
+	<resultMap id="returnNearestAvailableMachineMap"
+		type="com.path.dbmaps.vo.Machine_driverCO">
+		<result property="machine_driver_id" column="machine_driver_id" />
+		<result property="machine_id" column="machine_id" />
+		<result property="driver_id" column="driver_id" />
+		<result property="plate_number" column="plate_number" />
+		<result property="driver_mobile_number" column="mobile_number" />
+		<result property="driver_name" column="name" />
+		<result property="driver_profile" column="profile" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="ar_name" column="ar_name" />
+		<result property="distance" column="distance" />
+	</resultMap>
+
+	<select id="returnNearestAvailableMachine"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultMap="returnNearestAvailableMachineMap">
+		select md.machine_driver_id , d.name , d.mobile_number , d.ar_name ,
+		d.profile , m.plate_number,
+
+		<!-- time_format( (SEC_TO_TIME(((ST_Distance_Sphere( -->
+		<!-- point(#{longitude_from,jdbcType=NUMERIC}, -->
+		<!-- #{latitude_from,jdbcType=NUMERIC}), -->
+		<!-- point(md.longitude, md.latitude) -->
+		<!-- ) -->
+		<!-- /1000 ) / #{velocity,jdbcType=NUMERIC})*60*60)) ,"%H:%i:00" ) as -->
+		<!-- timeToReachClient -->
+		(ST_Distance_Sphere(
+		point(#{longitude_from,jdbcType=NUMERIC},
+		#{latitude_from,jdbcType=NUMERIC}),
+		point(md.longitude, md.latitude)
+		)
+		/1000 ) as distance
+		from machine_driver md ,driver d , machine m
+		where
+		md.machine_id = m.machine_id
+		and md.driver_id = d.driver_id
+		and exists
+		(select driver_id from driver_device dd where dd.driver_id =
+		d.driver_id )
+		and machine_driver_id in (select machine_driver_id from
+		working_hours
+		where
+		is_holiday= 1 and is_weekend = 1
+		and
+		(select
+		dayofweek( #{date,jdbcType=TIMESTAMP}) ) <![CDATA[ <> ]]>
+		weekend and
+		((select dayofweek( #{date,jdbcType=TIMESTAMP}) )between
+		start_day and
+		end_day)
+		and ( #{time,jdbcType=TIMESTAMP} between
+		start_work_hour and
+		end_work_hour
+		and
+		#{time,jdbcType=TIMESTAMP} not
+		between start_break_hour and end_break_hour )
+
+		)
+		and
+		md.machine_driver_status = 0
+		order by distance asc
+		limit 1
+	</select>
+
+
+	<resultMap id="returnDriverMap"
+		type="com.path.dbmaps.vo.Machine_driverCO">
+		<result property="machine_driver_id" column="machine_driver_id" />
+		<result property="machine_id" column="machine_id" />
+		<result property="driver_id" column="driver_id" />
+		<result property="plate_number" column="plate_number" />
+		<result property="driver_mobile_number" column="mobile_number" />
+		<result property="driver_name" column="name" />
+		<result property="driver_profile" column="profile" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="timeInSec" column="timeInSec" />
+		<result property="timeInSec" column="timeInSec" />
+		<result property="ar_name" column="ar_name" />
+	</resultMap>
+
+	<select id="returnDriver"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultMap="returnDriverMap">
+		select md.machine_driver_id , d.name , d.mobile_number , d.ar_name ,
+		d.profile , m.plate_number
+
+		from machine_driver md ,driver d , machine m
+
+		where
+
+		md.machine_id = m.machine_id
+		and md.driver_id = d.driver_id
+		and
+		d.driver_id in (select driver_id from driver_device )
+		and
+		machine_driver_id in (select machine_driver_id from working_hours
+		where
+		is_holiday= 1 and is_weekend = 1
+		and
+		(select dayofweek(
+		#{date,jdbcType=TIMESTAMP}) ) <![CDATA[ <> ]]>
+		weekend and
+		((select dayofweek( #{date,jdbcType=TIMESTAMP}) )between
+		start_day and
+		end_day)
+		and ( #{time,jdbcType=TIMESTAMP} between
+		start_work_hour and
+		end_work_hour
+		and
+		#{time,jdbcType=TIMESTAMP} not
+		between start_break_hour and end_break_hour )
+
+		)
+		and
+
+		md.machine_driver_id
+		not in (
+		SELECT rl.machine_driver_id
+		FROM reservation_list rl
+		WHERE
+		rl.DATE = #{date,jdbcType=TIMESTAMP}
+		AND ((rl.TIME >=
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP})
+		OR (rl.TIME <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT >=
+		#{time,jdbcType=TIMESTAMP})
+		OR (rl.TIME <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT >=
+		#{time,jdbcType=TIMESTAMP})
+		OR (rl.TIME >= #{time,jdbcType=TIMESTAMP}
+		AND rl.TIME_SLOT >= #{time,jdbcType=TIMESTAMP}
+		AND rl.TIME <![CDATA[ <= ]]>
+		#{time,jdbcType=TIMESTAMP})
+		)
+
+		)
+
+		limit 1
+	</select>
+
+<!-- 	<resultMap id="returnReservedDriverMap" -->
+<!-- 		type="com.path.dbmaps.vo.Machine_driverCO"> -->
+<!-- 		<result property="machine_driver_id" column="machine_driver_id" /> -->
+<!-- 		<result property="machine_id" column="machine_id" /> -->
+<!-- 		<result property="driver_id" column="driver_id" /> -->
+<!-- 		<result property="plate_number" column="plate_number" /> -->
+<!-- 		<result property="driver_mobile_number" column="mobile_number" /> -->
+<!-- 		<result property="driver_name" column="name" /> -->
+<!-- 		<result property="driver_profile" column="profile" /> -->
+<!-- 		<result property="timeToReachClient" column="timeToReachClient" /> -->
+<!-- 		<result property="timeInSec" column="timeInSec" /> -->
+<!-- 		<result property="timeInSec" column="timeInSec" /> -->
+<!-- 		<result property="ar_name" column="ar_name" /> -->
+<!-- 		<result property="nbOfClient" column="nbOfClient" /> -->
+<!-- 	</resultMap> -->
+
+<!-- 	<select id="returnReservedDriver" -->
+<!-- 		parameterType="com.path.dbmaps.vo.ReservationCO" -->
+<!-- 		resultMap="returnReservedDriverMap"> -->
+<!-- 		select rl.* , md.* ,r.* from reservation r , reservation_list rl , -->
+<!-- 		machine_driver md -->
+<!-- 		where r.reservation_id = rl.reservation_id -->
+<!-- 		and -->
+<!-- 		rl.machine_driver_id = md.machine_driver_id -->
+<!-- 		and rl.date = -->
+<!-- 		#{date,jdbcType=TIMESTAMP} -->
+<!-- 		and rl.reservation_list_status <![CDATA[ <> ]]> -->
+<!-- 		8 -->
+<!-- 		and rl.reservation_list_status <![CDATA[ <> ]]> -->
+<!-- 		9 -->
+<!-- 		and rl.reservation_list_status <![CDATA[ <> ]]> -->
+<!-- 		6 -->
+<!-- 		and rl.reservation_list_status <![CDATA[ <> ]]> -->
+<!-- 		4 -->
+<!-- 		and rl.reservation_list_status <![CDATA[ <> ]]> -->
+<!-- 		5 -->
+<!-- 		and rl.reservation_list_status <![CDATA[ <> ]]> -->
+<!-- 		11 -->
+<!-- 		and rl.reservation_list_status <![CDATA[ <> ]]> -->
+<!-- 		12 -->
+<!-- 	</select> -->
+
+
+
+<!-- 	<resultMap id="returnAllDriverMap" -->
+<!-- 		type="com.path.dbmaps.vo.Machine_driverCO"> -->
+<!-- 		<result property="machine_driver_id" column="machine_driver_id" /> -->
+<!-- 		<result property="machine_id" column="machine_id" /> -->
+<!-- 		<result property="driver_id" column="driver_id" /> -->
+<!-- 		<result property="plate_number" column="plate_number" /> -->
+<!-- 		<result property="driver_mobile_number" column="mobile_number" /> -->
+<!-- 		<result property="driver_name" column="name" /> -->
+<!-- 		<result property="driver_profile" column="profile" /> -->
+<!-- 		<result property="timeToReachClient" column="timeToReachClient" /> -->
+<!-- 		<result property="timeInSec" column="timeInSec" /> -->
+<!-- 		<result property="timeInSec" column="timeInSec" /> -->
+<!-- 		<result property="ar_name" column="ar_name" /> -->
+<!-- 		<result property="start_break_hour" column="start_break_hour" /> -->
+<!-- 		<result property="end_break_hour" column="end_break_hour" /> -->
+<!-- 		<result property="start_work_hour" column="start_work_hour" /> -->
+<!-- 		<result property="end_break_hour" column="end_break_hour" /> -->
+<!-- 		<result property="latitude" column="latitude" /> -->
+<!-- 		<result property="longitude" column="longitude" /> -->
+<!-- 	</resultMap> -->
+
+<!-- 	<select id="returnAllDriver" -->
+<!-- 		parameterType="com.path.dbmaps.vo.ReservationCO" -->
+<!-- 		resultMap="returnAllDriverMap"> -->
+<!-- 		select md.machine_driver_id,  -->
+<!-- 		md.longitude , md.latitude , -->
+<!-- 		 d.name , -->
+<!-- 		d.mobile_number , d.ar_name , d.profile , m.plate_number, -->
+
+<!-- 		w.* -->
+<!-- 		from -->
+<!-- 		driver d, machine m , -->
+<!-- 		 machine_driver md -->
+<!-- 		, working_hours w, -->
+<!-- 		driver_device dd -->
+<!-- 		where -->
+<!-- 		 d.driver_id= md.driver_id -->
+<!-- 		and md.machine_id = -->
+<!-- 		m.machine_id -->
+<!-- 		and -->
+<!-- 		dd.driver_id = d.driver_id -->
+<!-- 		and md.machine_driver_id = -->
+<!-- 		w.machine_driver_id -->
+		
+<!-- 		and d.availability = 0 -->
+		
+<!-- 		and md.machine_driver_id in ( -->
+<!-- 		select -->
+<!-- 		machine_driver_id from working_hours where -->
+<!-- 		is_holiday= 1 and is_weekend -->
+<!-- 		= 1 -->
+<!-- 		and -->
+<!-- 		(select dayofweek(#{date,jdbcType=TIMESTAMP}) ) <![CDATA[ <> ]]> -->
+<!-- 		weekend and -->
+<!-- 		((select dayofweek( #{date,jdbcType=TIMESTAMP}) )between -->
+<!-- 		start_day and -->
+<!-- 		end_day) -->
+<!-- 		) -->
+<!-- 		and (ST_Distance_Sphere( -->
+<!-- 			point(#{longitude_from,jdbcType=NUMERIC}, -->
+<!-- 			#{latitude_from,jdbcType=NUMERIC}), -->
+<!-- 			point(md.longitude, md.latitude) -->
+<!-- 			) -->
+<!-- 			/1000 ) <![CDATA[ < ]]> #{userDriverDistance,jdbcType=NUMERIC} -->
+<!-- 	</select> -->
+
+
+	<select id="returnUsernameMobileNumber"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientVO">
+		SELECT client_id , free_trip FROM client
+		WHERE
+		username =
+		#{username,jdbcType=VARCHAR}
+		and mobile_number =
+		#{mobile_number,jdbcType=VARCHAR}
+
+	</select>
+
+
+
+	<select id="returnClientIdMobileNumberDevice"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientDeviceCO">
+		SELECT c.username, c.free_trip FROM client_device csd , client c
+		WHERE
+		csd.client_id = c.client_id and
+		csd.client_id =
+		#{client_id,jdbcType=NUMERIC}
+		AND
+		csd.device_id =
+		(SELECT
+		device_id
+		FROM
+		device where device_UUID =
+		#{device_UUID,jdbcType=VARCHAR})
+
+	</select>
+
+	<select id="returnCombinationUsernameMobileNumberDevice"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientDeviceCO">
+		SELECT * FROM client_device csd
+		WHERE
+		csd.client_id =
+		(select
+		client_id from client where username=
+		#{username,jdbcType=VARCHAR} and mobile_number= #{mobile_number,jdbcType=VARCHAR})
+		and
+		csd.device_id = (select device_id
+		from device where device_UUID =
+		#{device_UUID,jdbcType=VARCHAR})
+
+	</select>
+
+
+	<select id="returnClientFromClientDevice"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.ClientDeviceCO">
+		SELECT * FROM client_device csd
+		WHERE
+		csd.client_id =
+		(select
+		client_id from client where mobile_number=
+		#{mobile_number,jdbcType=VARCHAR})
+
+			
+	</select>
+
+
+
+
+<!-- 	<resultMap id="returnRecurringReservationMap"
+		type="com.path.dbmaps.vo.ReservationSC">
+		<result column="reservation_id" property="reservation_id" />
+		<result column="reservation_list_id"
+			property="reservation_list_id" />
+		<result column="plate_number" property="plate_number" />
+		<result column="name" property="driver_name" />
+		<result column="ar_name" property="ar_name" />
+		<result column="mobile_number" property="driver_mobile_number" />
+		<result column="profile" property="driver_profile" />
+		<result column="date" property="date" />
+		<result column="time" property="time" />
+		<result column="reservation_list_status"
+		property="reservation_list_status" />
+		<result property="timeToReachClient" column="timeToReachClient" />
+		<result property="distance" column="distance" />
+		<result property="occurrence_type" column="occurrence_type" />
+
+	</resultMap> -->
+
+	<!-- 
+	
+	will be moved to commonmapper
+		
+	<select id="returnRecurringReservation"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultMap="returnRecurringReservationMap">
+		select * from reservation where client_id =
+		#{client_id,jdbcType=NUMERIC}
+		and occurrence_type =
+		#{occurrence_type,jdbcType=NUMERIC}
+		<if test="date != null">
+			and date = #{date,jdbcType=TIMESTAMP}
+		</if>
+		order by date desc
+	</select> -->
+
+
+<!-- 	<select id="returnNotConfirmedTlubtukReservations" -->
+<!-- 		parameterType="com.path.dbmaps.vo.ReservationCO" -->
+<!-- 		resultType="com.path.dbmaps.vo.ReservationCO"> -->
+<!-- 		SELECT rl.reservation_list_id , rl.date , rl.time , rl.dateTimeOfCreateReservation -->
+<!-- 		FROM -->
+<!-- 		reservation_list rl, reservation r  -->
+<!-- 		WHERE -->
+<!-- 		r.reservation_id = rl.reservation_id -->
+<!-- 		and  -->
+<!-- 		rl.reservation_list_status = 12 -->
+
+<!-- 	</select> -->
+
+	<select id="returnListOfInvitedContact"
+		parameterType="com.path.dbmaps.vo.InvitedContactCO"
+		resultType="string">
+		SELECT inivited_mobile_number
+		FROM invited_contact
+		where client_id =  #{client_id,jdbcType=NUMERIC}
+	</select>
+	
+	
+	<select id="returnNbOfReservation"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultType="com.path.dbmaps.vo.ReservationCO">
+		SELECT count(reservation_list_id)
+		FROM reservation_list rl , reservation r 
+		where rl.reservation_id = r.reservation_id 
+		and r.client_id = #{client_id,jdbcType=NUMERIC}
+	</select>
+	
+	
+	
+	
+	
+	<resultMap id="returnListOfTlubtukReservationMap"
+		type="com.path.dbmaps.vo.ReservationSC">
+		<result column="name"
+			property="driver_name" />
+
+	</resultMap>
+
+	<select id="returnListOfTlubtukReservation"
+		parameterType="com.path.dbmaps.vo.ReservationVO"
+		resultMap="returnListOfTlubtukReservationMap">
+	
+<!-- 	<select id="returnListOfTlubtukReservation" -->
+<!-- 		parameterType="com.path.dbmaps.vo.ReservationVO" -->
+<!-- 		resultType="com.path.dbmaps.vo.ReservationSC"> -->
+		
+		SELECT r.* , rl.* , rd.* , p.*, d.name 
+		from reservation r , reservation_list rl , reservation_details rd  
+		, paramlov p , machine_driver md , driver d
+		where
+		r.reservation_id = rl.reservation_id
+		and 
+		rl.reservation_list_id = rd.reservation_list_id
+		and 
+		p.paramlov_id = rd.paramlov_id
+		and rl.machine_driver_id = md.machine_driver_id
+		and md.driver_id = d.driver_id
+		and r.client_id = #{client_id,jdbcType=NUMERIC}
+		 and rl.date = #{date,jdbcType=TIMESTAMP}
+		 and rl.reservation_list_status <![CDATA[ <> ]]> 12
+	</select>
+	
+	<select id="returnListOfBrokers"
+		parameterType="com.path.dbmaps.vo.ParamLovVO"
+		resultType="com.path.dbmaps.vo.ParamLovVO">
+		select parent_id , broker_id , broker_name , broker_mobile_number,
+		broker_ar_name
+		 from paramlov where 
+		parent_id = (select paramlov_id from paramlov where 
+		paramlov_id = #{paramlov_id,jdbcType=NUMERIC}) 
+	</select>
+	
+	
+	<select id="returnTokenOfMobileNumber"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.DeviceSC">
+		select d.device_token,  d.language_id from device d , client c , client_device cd
+		where d.device_id = cd.device_id
+		and cd.client_id = c.client_id
+		and c.mobile_number = #{mobile_number,jdbcType=VARCHAR}
+		and c.active = #{active,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="returnIfDeviceExistInClientDevice"
+		parameterType="com.path.dbmaps.vo.ClientCO"
+		resultType="com.path.dbmaps.vo.Client_deviceVO">
+		select * from client_device 
+		where device_id = (select device_id from device
+				 where device_UUID =#{device_UUID,jdbcType=VARCHAR} )
+	</select>
+	
+	<select id="returnListOfServices"
+		parameterType="com.path.dbmaps.vo.LovVO"
+		resultType="com.path.dbmaps.vo.ParamLovSC">
+		select * from paramlov where lov_id = #{lov_id,jdbcType=NUMERIC}
+<!-- 		and key_value is not null -->
+	</select>
+	
+	<select id="returnCancelParamLovId"
+		parameterType="com.path.dbmaps.vo.ReservationSC"
+		resultType="com.path.dbmaps.vo.ParamLovVO">
+		select paramlov_id from paramlov 
+		where key_value = #{key_value,jdbcType=NUMERIC}
+	</select>
+</mapper>

@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="omniAdminPushMapper">
+
+	<insert id="insertDriver"
+		parameterType="com.path.dbmaps.vo.DriverVO" useGeneratedKeys="true"
+		keyProperty="driver_id">
+		INSERT INTO driver (
+		name,address, mobile_number, type,
+		date_of_birth , profile , pic_of_id , driver_status, password, salt,
+		username,ar_name)
+		VALUES (
+		#{name,jdbcType=VARCHAR},
+		#{address,jdbcType=VARCHAR},
+		#{mobile_number,jdbcType=VARCHAR} ,
+		#{type,jdbcType=NUMERIC},
+		#{date_of_birth,jdbcType=TIMESTAMP},
+		#{profile,jdbcType=VARCHAR},
+		#{pic_of_id,jdbcType=VARCHAR},
+		#{driver_status,jdbcType=VARCHAR},
+		#{password,jdbcType=VARCHAR},
+		#{salt,jdbcType=VARCHAR},
+		#{username,jdbcType=VARCHAR},
+		#{ar_name,jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<insert id="insertMachine"
+		parameterType="com.path.dbmaps.vo.MachineVO">
+		INSERT INTO machine (
+		plate_number, model, machine_status
+		)
+		VALUES (
+		#{plate_number,jdbcType=VARCHAR},
+		#{model,jdbcType=VARCHAR},
+		#{machine_status,jdbcType=NUMERIC}
+		)
+	</insert>
+
+	<update id="updateMachineInfos"
+		parameterType="com.path.dbmaps.vo.MachineVO">
+		UPDATE machine SET
+		plate_number=#{plate_number,jdbcType=VARCHAR},
+		model =
+		#{model,jdbcType=VARCHAR},
+		machine_status=
+		#{machine_status,jdbcType=NUMERIC}
+		WHERE machine_id =
+		#{machine_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updateMachineStatus"
+		parameterType="com.path.dbmaps.vo.MachineCO">
+		UPDATE machine set machine_status =
+		#{machine_status,jdbcType=NUMERIC}
+		where plate_number =
+		#{plate_number,jdbcType=NUMERIC}
+	</update>
+
+	<insert id="insertAdmin"
+		parameterType="com.path.dbmaps.vo.AdminVO">
+		INSERT INTO admin (
+		name, username, password, salt,
+		mobile_number
+		)
+		VALUES (
+		#{name,jdbcType=VARCHAR},
+		#{username,jdbcType=VARCHAR},
+		#{password,jdbcType=VARCHAR},
+		#{salt,jdbcType=VARCHAR},
+		#{mobile_number,jdbcType=VARCHAR}
+		)
+	</insert>
+
+
+	<insert id="insertDeviceAdmin"
+		parameterType="com.path.dbmaps.vo.AdminCO">
+
+		INSERT INTO deviceadmin(device_UUID, device_name) values
+		(#{device_UUID,jdbcType=NUMERIC},#{device_name,jdbcType=VARCHAR})
+	</insert>
+
+
+	<!-- <insert id="insertAdminDeviceCombination" -->
+	<!-- parameterType="com.path.dbmaps.vo.AdminCO"> -->
+
+	<!-- INSERT INTO -->
+	<!-- admin_device(admin_id,device_id) values ( -->
+	<!-- (select admin_id from admin where username = -->
+	<!-- #{username,jdbcType=VARCHAR}), -->
+	<!-- (select device_admin_id from deviceadmin -->
+	<!-- where device_UUID =#{device_UUID,jdbcType=VARCHAR} ) -->
+	<!-- ) -->
+	<!-- </insert> -->
+
+	<insert id="insertAdminDeviceCombination"
+		parameterType="com.path.dbmaps.vo.AdminCO">
+
+		INSERT INTO
+		admin_device(admin_id,device_id) values (
+		(select admin_id from admin where username =
+		#{username,jdbcType=VARCHAR}),
+		(select device_id from device
+		where
+		device_UUID =#{device_UUID,jdbcType=VARCHAR} )
+		)
+	</insert>
+
+
+	<!-- <update id="updateAdminDeviceCombination" -->
+	<!-- parameterType="com.path.dbmaps.vo.AdminCO"> -->
+	<!-- UPDATE admin_device SET -->
+	<!-- admin_id=(select admin_id from -->
+	<!-- admin where username = -->
+	<!-- #{username,jdbcType=VARCHAR}), -->
+	<!-- device_id=(select -->
+	<!-- device_admin_id from -->
+	<!-- deviceadmin where device_UUID = -->
+	<!-- #{device_UUID,jdbcType=VARCHAR}) -->
+	<!-- WHERE -->
+	<!-- admin_device_id=#{admin_device_id,jdbcType=NUMERIC} -->
+	<!-- </update> -->
+
+
+	<update id="updateAdminDeviceCombination"
+		parameterType="com.path.dbmaps.vo.AdminCO">
+		UPDATE admin_device SET
+		admin_id=(select admin_id from
+		admin where username =
+		#{username,jdbcType=VARCHAR}),
+		device_id=(select
+		device_id from
+		device where device_UUID =
+		#{device_UUID,jdbcType=VARCHAR})
+		WHERE
+		admin_device_id=#{admin_device_id,jdbcType=NUMERIC}
+	</update>
+
+
+	<update id="updateLastLoginAdmin"
+		parameterType="com.path.dbmaps.vo.AdminCO">
+		update admin set last_login_admin =
+		#{last_login_admin,jdbcType=TIMESTAMP}
+		WHERE username=
+		#{username,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updateDriverInfos"
+		parameterType="com.path.dbmaps.vo.Machine_driverCO">
+		UPDATE machine_driver SET
+		machine_driver_status =
+		#{machine_driver_status,jdbcType=NUMERIC}
+		WHERE driver_id =
+		#{driver_id,jdbcType=NUMERIC}
+	</update>
+
+	<insert id="insertMachineMnt"
+		parameterType="com.path.dbmaps.vo.MachineCO">
+		INSERT INTO machine_mnt(machine_id, issue_type,
+		store_id, date, cost)
+		values( #{machine_id,jdbcType=NUMERIC},
+		#{issue_type,jdbcType=VARCHAR},
+		#{store_id,jdbcType=NUMERIC},
+		#{date,jdbcType=TIMESTAMP},
+		#{cost,jdbcType=NUMERIC}
+		)
+	</insert>
+
+
+	<insert id="insertMachineDriver"
+		parameterType="com.path.dbmaps.vo.Machine_driverCO"
+		useGeneratedKeys="true" keyProperty="machine_driver_id">
+		INSERT INTO
+		machine_driver(machine_id, driver_id,
+		latitude , longitude,
+		machine_driver_status)
+		values(
+		#{machine_id,jdbcType=NUMERIC},
+		#{driver_id,jdbcType=NUMERIC},
+		#{latitude,jdbcType=NUMERIC},
+		#{longitude,jdbcType=NUMERIC},
+		#{machine_driver_status,jdbcType=NUMERIC}
+		)
+	</insert>
+
+
+	<update id="updateProperty"
+		parameterType="com.path.dbmaps.vo.PropertiesVO">
+		UPDATE properties SET
+		property_value =
+		#{property_value,jdbcType=VARCHAR}
+		WHERE property_name =
+		#{property_name,jdbcType=VARCHAR}
+
+	</update>
+
+
+
+	<update id="updateAdminStatus"
+		parameterType="com.path.dbmaps.vo.AdminCO">
+		UPDATE admin_device SET
+		admin_status=#{admin_status,jdbcType=NUMERIC}
+		WHERE
+		device_id =
+		(select
+		device_id from deviceadmin where device_UUID =
+		#{device_UUID,jdbcType=NUMERIC} )
+		and admin_id =
+		#{admin_id,jdbcType=NUMERIC}
+	</update>
+
+
+	<insert id="insertCompany"
+		parameterType="com.path.dbmaps.vo.CompaniesCO" useGeneratedKeys="true"
+		keyProperty="company_id">
+		insert into companies (company_name ,mobile_number,
+		email,logo ,
+		discount)
+		values (
+		#{company_name,jdbcType=VARCHAR},
+		#{mobile_number,jdbcType=VARCHAR},
+		#{email,jdbcType=VARCHAR},
+		#{logo,jdbcType=VARCHAR},
+		#{discount,jdbcType=VARCHAR}
+		)
+	</insert>
+
+
+	<update id="updateMobileNumberCompany"
+		parameterType="com.path.dbmaps.vo.CompaniesSC">
+		UPDATE client SET
+		company_id=#{company_id,jdbcType=NUMERIC}
+		WHERE
+		mobile_number =
+		#{mobile_number,jdbcType=VARCHAR}
+	</update>
+
+	<insert id="insertMobileNumberCompany"
+		parameterType="com.path.dbmaps.vo.CompaniesSC">
+		insert into client (username ,mobile_number, company_id
+		)
+		values (
+		#{username,jdbcType=VARCHAR},
+		#{mobile_number,jdbcType=VARCHAR},
+		#{company_id,jdbcType=VARCHAR}
+		)
+	</insert>
+
+
+	<update id="updateDriverAvailabilty"
+		parameterType="com.path.dbmaps.vo.DriverVO">
+		UPDATE working_hours SET
+		driver_availability=#{driver_availability,jdbcType=NUMERIC}
+		WHERE
+		machine_driver_id =(select machine_driver_id from machine_driver
+		where
+		driver_id = #{driver_id,jdbcType=VARCHAR})
+	</update>
+
+
+	<insert id="insertWorkingHours"
+		parameterType="com.path.dbmaps.vo.MachineDriverSC">
+		insert into working_hours (machine_driver_id
+		,day_of_week, start_day,end_day , start_work_hour, end_work_hour,
+		start_break_hour, end_break_hour, is_holiday, is_weekend, weekEnd,
+		driver_availability
+		)
+		values (
+		#{machine_driver_id,jdbcType=VARCHAR},
+		#{day_of_week,jdbcType=VARCHAR},
+		#{start_day,jdbcType=VARCHAR},
+		#{end_day,jdbcType=VARCHAR},
+		#{start_work_hour,jdbcType=VARCHAR},
+		#{end_work_hour,jdbcType=VARCHAR},
+		#{start_break_hour,jdbcType=VARCHAR},
+		#{end_break_hour,jdbcType=VARCHAR},
+		#{is_holiday,jdbcType=VARCHAR},
+		#{is_weekend,jdbcType=VARCHAR},
+		#{weekEnd,jdbcType=VARCHAR},
+		#{driver_availability,jdbcType=VARCHAR}
+		)
+	</insert>
+
+
+	<update id="updateMachineDriver"
+		parameterType="com.path.dbmaps.vo.MachineDriverSC">
+		UPDATE machine_driver SET
+		machine_id=#{machine_id,jdbcType=NUMERIC}
+		WHERE
+		driver_id =
+		#{driver_id,jdbcType=NUMERIC}
+	</update>
+
+
+
+	<update id="updateDriverWorkingHours"
+		parameterType="com.path.dbmaps.vo.MachineDriverSC">
+		UPDATE working_hours SET
+		day_of_week=#{day_of_week,jdbcType=NUMERIC},
+		start_day=#{start_day,jdbcType=NUMERIC},
+		end_day=#{end_day,jdbcType=NUMERIC},
+		start_work_hour=#{start_work_hour,jdbcType=TIMESTAMP},
+		end_work_hour=#{end_work_hour,jdbcType=TIMESTAMP},
+		start_break_hour=#{start_break_hour,jdbcType=TIMESTAMP},
+		end_break_hour=#{end_break_hour,jdbcType=TIMESTAMP},
+		is_holiday=#{is_holiday,jdbcType=NUMERIC},
+		is_weekend=#{is_weekend,jdbcType=NUMERIC},
+		weekEnd=#{weekEnd,jdbcType=NUMERIC},
+		driver_availability=#{driver_availability,jdbcType=NUMERIC}
+		WHERE
+		machine_driver_id = (select machine_driver_id from machine_driver
+		where driver_id =#{driver_id,jdbcType=NUMERIC})
+	</update>
+	
+	
+	<update id="updateFactureReceipt"
+		parameterType="com.path.dbmaps.vo.facture">
+		UPDATE facture SET 
+		receipt_admin = 1,
+		amount = #{amount,jdbcType=NUMERIC},
+		payment_status = #{payment_status,jdbcType=NUMERIC}
+		where reservation_list_id = #{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+
+</mapper>

@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="omniDriverPullMapper">
+
+
+
+	<select id="returnDriverInfo"
+		parameterType="com.path.dbmaps.vo.DriverVO"
+		resultType="com.path.dbmaps.vo.DriverVO">
+		SELECT username , profile, last_login_driver FROM driver d
+		WHERE
+		driver_id = #{driver_id,jdbcType=NUMERIC}
+	</select>
+
+
+	<!-- <select id="returnCombinationDriverDevice" -->
+	<!-- parameterType="com.path.dbmaps.vo.Driver_deviceCO" -->
+	<!-- resultType="com.path.dbmaps.vo.Driver_deviceCO"> -->
+	<!-- SELECT dd.* , d.username FROM driver_device dd , driver d -->
+	<!-- WHERE -->
+	<!-- dd.driver_id = -->
+	<!-- #{driver_id,jdbcType=NUMERIC} -->
+	<!-- AND -->
+	<!-- dd.device_id = -->
+	<!-- (SELECT -->
+	<!-- device_driver_id -->
+	<!-- FROM -->
+	<!-- devicedriver where -->
+	<!-- device_UUID = -->
+	<!-- #{device_UUID,jdbcType=NUMERIC}) -->
+	<!-- and d.driver_id = -->
+	<!-- dd.driver_id -->
+	<!-- </select> -->
+
+	<select id="returnCombinationDriverDevice"
+		parameterType="com.path.dbmaps.vo.Driver_deviceCO"
+		resultType="com.path.dbmaps.vo.Driver_deviceCO">
+		SELECT dd.* , d.username FROM driver_device dd , driver d
+		WHERE
+		dd.driver_id =
+		#{driver_id,jdbcType=NUMERIC}
+		AND
+		dd.device_id =
+		(SELECT
+		device_id
+		FROM
+		device where
+		device_UUID =
+		#{device_UUID,jdbcType=NUMERIC})
+		and d.driver_id =
+		dd.driver_id
+	</select>
+
+
+	<!-- <select id="returnCombDriverDevice" -->
+	<!-- parameterType="com.path.dbmaps.vo.DriverCO" -->
+	<!-- resultType="com.path.dbmaps.vo.Driver_deviceVO"> -->
+	<!-- SELECT dd.* FROM driver_device dd -->
+	<!-- WHERE dd.driver_id = -->
+	<!-- (select driver_id from driver where username = -->
+	<!-- #{username,jdbcType=VARCHAR}) -->
+	<!-- AND dd.device_id = (select -->
+	<!-- device_driver_id from devicedriver where device_UUID -->
+	<!-- =#{device_UUID,jdbcType=VARCHAR} ) -->
+	<!-- </select> -->
+	<select id="returnCombDriverDevice"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.Driver_deviceVO">
+		SELECT dd.* FROM driver_device dd
+		WHERE dd.driver_id =
+		(select driver_id from driver where username =
+		#{username,jdbcType=VARCHAR})
+		AND dd.device_id = (select
+		device_id from
+		device where device_UUID
+		=#{device_UUID,jdbcType=VARCHAR} )
+	</select>
+
+	<select id="returnDriverUsername"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.DriverVO">
+		SELECT * from driver where username=
+		#{username,jdbcType=VARCHAR}
+	</select>
+
+	<select id="returnListReservationsNotFinishedDriver"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.ReservationSC">
+		select r.reservation_id ,r.latitude_from , r.longitude_from ,
+		r.client_id,
+		r.latitude_to , r.longitude_to, r.reservation_type , rl.*,
+		c.username, c.mobile_number from
+		reservation_list rl,
+		reservation r,
+		client c
+		where
+		rl.reservation_id = r.reservation_id
+
+		and r.reservation_type <![CDATA[ <> ]]>
+		2
+		and
+		c.client_id = r.client_id
+		and
+		rl.machine_driver_id =
+		(select
+		machine_driver_id from
+		machine_driver
+		where driver_id =
+		#{driver_id,jdbcType=VARCHAR})
+		and rl.date =
+		#{date,jdbcType=VARCHAR}
+		and (rl.reservation_list_status <![CDATA[ <> ]]>
+		4 and rl.reservation_list_status <![CDATA[ <> ]]>
+		12)
+		order by rl.time desc
+	</select>
+
+
+
+	<select id="returnUsernamePassDriverById"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.DriverVO">
+		SELECT * from driver WHERE
+		driver_id =
+		#{driver_id,jdbcType=NUMERIC}
+	</select>
+
+	<select id="returnMobileNumberDriver"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.DriverVO">
+		SELECT mobile_number FROM driver WHERE
+		username=
+		#{username,jdbcType=VARCHAR}
+	</select>
+
+	<select id="returnDriverUsernameComb"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.Driver_deviceVO">
+		SELECT * FROM driver_device WHERE
+		driver_id= (select
+		driver_id from driver where
+		username=#{username,jdbcType=VARCHAR})
+	</select>
+
+	<select id="returnDeviceOfClient"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.DeviceVO">
+		select d.* , cd. * , r.*, rl.* from
+		device d , client_device
+		cd , reservation r , reservation_list rl
+		where r.reservation_id =
+		rl.reservation_id and
+		rl.reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+		and r.client_id = cd.client_id
+		and d.device_id = cd.device_id
+		and cd.client_status = 0
+	</select>
+
+
+	<select id="returnDriverLocation"
+		parameterType="com.path.dbmaps.vo.ReservationListVO"
+		resultType="com.path.dbmaps.vo.MachineDriverVO">
+		select latitude , longitude from machine_driver where
+		machine_driver_id =
+		(select machine_driver_id from reservation_list rl
+		, reservation r
+		where
+		rl.reservation_id = r.reservation_id
+		and
+		reservation_list_id = #{reservation_list_id,jdbcType=NUMERIC} )
+	</select>
+
+
+
+	<!-- <select id="returnDistanceOfTrip" -->
+	<!-- parameterType="com.path.dbmaps.vo.ReservationCO" -->
+	<!-- resultType="com.path.dbmaps.vo.ReservationCO"> -->
+	<!-- select ST_Distance_Sphere( -->
+	<!-- point(longitude_from, -->
+	<!-- latitude_from), -->
+	<!-- point(longitude_to, latitude_to) -->
+	<!-- ) as distance -->
+	<!-- from -->
+	<!-- reservation where reservation_id = #{reservation_id,jdbcType=NUMERIC} -->
+	<!-- </select> -->
+
+	<select id="returnDistanceOfTrip"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultType="com.path.dbmaps.vo.ReservationCO">
+		select distanceTakeWait , distanceStartFinish from
+		reservation_list where
+		reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+	</select>
+
+
+	<select id="returnDriverToken"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.DeviceDriverVO">
+		select device_token from device where device_UUID =
+		#{device_UUID ,jdbcType=VARCHAR}
+	</select>
+
+
+	<!-- <select id="returnDistanceFromToClient" -->
+	<!-- parameterType="com.path.dbmaps.vo.ReservationCO" -->
+	<!-- resultType="com.path.dbmaps.vo.ReservationCO"> -->
+	<!-- select ST_Distance_Sphere( -->
+	<!-- point(longitude_from, -->
+	<!-- latitude_from), -->
+	<!-- point(machine_driver_longitude, -->
+	<!-- machine_driver_latitude) -->
+	<!-- ) as distance -->
+	<!-- from -->
+	<!-- reservation where -->
+	<!-- reservation_id = #{reservation_id,jdbcType=NUMERIC} -->
+	<!-- </select> -->
+
+	<select id="returnDistanceFromToClient"
+		parameterType="com.path.dbmaps.vo.ReservationCO"
+		resultType="com.path.dbmaps.vo.ReservationCO">
+		select * from reservation_list where
+		reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+	</select>
+
+	<select id="returnMachineDriverLocation"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.MachineDriverLocationVO">
+		<!-- select mdl.*, d.name from machine_driver_location mdl , -->
+		<!-- driver d , machine_driver md -->
+		<!-- where -->
+		<!-- mdl.machine_driver_id = (select -->
+		<!-- machine_driver_id from machine_driver -->
+		<!-- where driver_id = -->
+		<!-- #{driver_id,jdbcType=NUMERIC}) -->
+		<!-- and mdl.machine_driver_id = -->
+		<!-- md.machine_driver_id -->
+		<!-- and md.driver_id = d.driver_id -->
+
+
+
+		<!-- select * -->
+		<!-- from machine_driver_location -->
+		<!-- where machine_driver_location_id = (select max(machine_driver_location_id) -->
+		<!-- from machine_driver_location -->
+		<!-- where machine_driver_id = (select machine_driver_id from machine_driver -->
+		<!-- where driver_id = #{driver_id,jdbcType=NUMERIC})); -->
+
+		select mdl.* , d.name
+		from machine_driver_location mdl , driver d ,
+		machine_driver md
+		where mdl.machine_driver_id = md.machine_driver_id
+		and d.driver_id = md.driver_id
+		and mdl.machine_driver_location_id = (select
+		max(machine_driver_location_id)
+		from machine_driver_location
+		where
+		machine_driver_id = (select machine_driver_id from machine_driver
+		where driver_id = #{driver_id,jdbcType=NUMERIC})
+		and date
+		=#{date,jdbcType=TIMESTAMP} and time <![CDATA[ < ]]>
+		#{time,jdbcType=TIMESTAMP} );
+	</select>
+
+
+
+
+
+
+	<select id="returnDiscountOfClient"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.CompaniesSC">
+		select c.discount from companies c
+		where company_id =
+		(select company_id from client where client_id =
+		(select client_id from
+		reservation where reservation_id =
+		(select reservation_id from
+		reservation_list where reservation_list_id =
+		(#{reservation_list_id,jdbcType=NUMERIC}))
+		)
+		)
+
+	</select>
+
+	<select id="returnDriverStatus"
+		parameterType="com.path.dbmaps.vo.DriverVO"
+		resultType="com.path.dbmaps.vo.DriverVO">
+		select on_off from driver
+		where driver_id =
+		#{driver_id,jdbcType=NUMERIC}
+
+	</select>
+
+
+
+
+	<select id="returnlistOfFinishedReservationsDriver"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.ReservationSC">
+		select r.reservation_id ,r.latitude_from , r.longitude_from ,
+		r.client_id,
+		r.latitude_to , r.longitude_to, r.reservation_type , rl.*,
+		c.username, c.mobile_number
+		, f.cost , f.totalCostByDriver from
+		reservation_list rl, facture f,
+		reservation r, client c
+		where
+		rl.reservation_id = r.reservation_id
+		and
+		rl.reservation_list_id =
+		f.reservation_list_id
+		and r.reservation_type <![CDATA[ <> ]]>
+		2
+		and
+		c.client_id = r.client_id
+		and
+		rl.machine_driver_id =
+		(select
+		machine_driver_id from
+		machine_driver
+		where driver_id =
+		#{driver_id,jdbcType=NUMERIC})
+		and rl.date =
+		#{date,jdbcType=NUMERIC}
+
+		order by rl.time desc
+	</select>
+
+
+
+	<select id="returnListOfDriverLocations"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.MachineDriverLocationVO">
+		WITH ranked_messages AS (
+		SELECT *, rank() OVER (PARTITION BY machine_driver_id ORDER BY
+		machine_driver_location_id DESC) AS rn
+		FROM machine_driver_location AS m
+		)
+		SELECT ranked_messages.*,d.name , d.driver_id FROM ranked_messages
+		, machine_driver md , driver d WHERE rn = 1 and
+		ranked_messages.date=#{date,jdbcType=TIMESTAMP}
+		and ranked_messages.machine_driver_id = md.machine_driver_id
+		and md.driver_id = d.driver_id
+		and md.machine_driver_id in (
+		select
+		machine_driver_id from working_hours
+		where
+		is_holiday= 1 and is_weekend
+		= 1
+		and
+		(select
+		dayofweek(#{date,jdbcType=TIMESTAMP}) ) <![CDATA[ <> ]]>
+		weekend and
+		((select dayofweek( #{date,jdbcType=TIMESTAMP}) )between
+		start_day and
+		end_day)
+		)
+	</select>
+
+	<resultMap
+		id="returnListOfFinishedReservationsWithAddressMap"
+		type="com.path.dbmaps.vo.ReservationSC">
+		<result property="addressFrom.city_from" column="city_from" />
+		<result property="addressFrom.street_from" column="street_from" />
+		<result property="addressFrom.building_from"
+			column="building_from" />
+		<result property="addressFrom.floor_from" column="floor_from" />
+		<result property="addressFrom.second_mobile_number_from"
+			column="second_mobile_number_from" />
+		<result property="addressTo.city_to" column="city_to" />
+		<result property="addressTo.street_to" column="street_to" />
+		<result property="addressTo.building_to" column="building_to" />
+		<result property="addressTo.floor_to" column="floor_to" />
+		<result property="addressTo.second_mobile_number_to"
+			column="second_mobile_number_to" />
+		<result property="amount" column="amount" />
+		<result property="description" column="description" />
+	</resultMap>
+
+	<select id="returnListOfFinishedReservationsWithAddress"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultMap="returnListOfFinishedReservationsWithAddressMap">
+
+		select r.reservation_id ,r.latitude_from , r.longitude_from , r.client_id,
+		r.latitude_to , r.longitude_to, r.reservation_type , rl.*, rd.*,
+		c.username, c.mobile_number
+		, f.cost , f.totalCostByDriver from
+		reservation_list rl, facture f,
+		reservation r, reservation_details rd,
+		client c
+		where
+		rl.reservation_id = r.reservation_id
+		and
+		rl.reservation_list_id = f.reservation_list_id
+		and
+		rl.reservation_list_id = rd.reservation_list_id
+		and
+		c.client_id = r.client_id
+		and
+		rl.machine_driver_id =
+		(select
+		machine_driver_id from
+		machine_driver
+		where driver_id =
+		#{driver_id,jdbcType=NUMERIC})
+		and
+		rl.date =
+		#{date,jdbcType=NUMERIC}
+
+		order by rl.time desc
+	</select>
+
+	<resultMap
+		id="returnListOFNotFinishedReservationsWithAddressMap"
+		type="com.path.dbmaps.vo.ReservationSC">
+		<result property="addressFrom.city_from" column="city_from" />
+		<result property="addressFrom.street_from" column="street_from" />
+		<result property="addressFrom.building_from"
+			column="building_from" />
+		<result property="addressFrom.floor_from" column="floor_from" />
+		<result property="addressFrom.second_mobile_number_from"
+			column="second_mobile_number_from" />
+		<result property="addressTo.city_to" column="city_to" />
+		<result property="addressTo.street_to" column="street_to" />
+		<result property="addressTo.building_to" column="building_to" />
+		<result property="addressTo.floor_to" column="floor_to" />
+		<result property="addressTo.second_mobile_number_to"
+			column="second_mobile_number_to" />
+		<result property="amount" column="amount" />
+		<result property="description" column="description" />
+	</resultMap>
+
+	<select id="returnListOFNotFinishedReservationsWithAddress"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultMap="returnListOFNotFinishedReservationsWithAddressMap">
+
+		select r.reservation_id ,r.latitude_from , r.longitude_from ,
+		r.client_id,
+		r.latitude_to , r.longitude_to, r.reservation_type ,
+		rl.*,rd.*,
+		c.username, c.mobile_number from
+		reservation_list rl,
+		reservation r, reservation_details rd ,client c
+		where
+		rl.reservation_id
+		= r.reservation_id
+		and
+		rl.reservation_list_id = rd.reservation_list_id
+		and
+		c.client_id = r.client_id
+		and
+		rl.machine_driver_id =
+		(select
+		machine_driver_id from
+		machine_driver
+		where driver_id =
+		#{driver_id,jdbcType=NUMERIC})
+		and rl.date =
+		#{date,jdbcType=VARCHAR}
+		and (rl.reservation_list_status <![CDATA[ <> ]]>
+		4 and rl.reservation_list_status <![CDATA[ <> ]]>
+		12)
+		order by rl.time desc
+	</select>
+
+
+	<select id="returnListOfFutureReservation"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.ReservationCO">
+		select rl.* , r.* from reservation r , reservation_list rl
+		where rl.reservation_id = r.reservation_id
+		and rl.machine_driver_id = (select machine_driver_id from driver
+		where driver_id = #{driver_id,jdbcType=NUMERIC})
+		and rl.date = #{date,jdbcType=TIMESTAMP}
+		and rl.time >= #{time,jdbcType=TIMESTAMP}
+		and reservation_list_status = 0
+	</select>
+
+
+	<select id="returnRecurringClients"
+		parameterType="com.path.dbmaps.vo.DriverCO"
+		resultType="com.path.dbmaps.vo.ReservationCO">
+		SELECT a.client_id,a.name,a.mobile_number
+		FROM oadmmigdb.client as a,reservation as b
+		where b.recurring_type = 2
+		and
+		a.client_id=b.client_id;
+	</select>
+
+
+
+
+
+</mapper>

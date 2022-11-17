@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="omniAdminPullMapper">
+
+	<select id="returnDriver"
+		parameterType="com.path.dbmaps.vo.DriverVO"
+		resultType="com.path.dbmaps.vo.DriverVO">
+		SELECT * FROM driver WHERE username =
+		#{username,jdbcType=VARCHAR}
+	</select>
+
+	<select id="returnMachineInfo"
+		parameterType="com.path.dbmaps.vo.MachineVO"
+		resultType="com.path.dbmaps.vo.MachineVO">
+		SELECT m.* , md.driver_id FROM machine m , machine_driver
+		md WHERE
+		m.machine_id = md.machine_id and
+		m.machine_id =
+		#{machine_id,jdbcType=NUMERIC}
+	</select>
+
+	<select id="returnMachineByPlateNumber"
+		parameterType="com.path.dbmaps.vo.MachineVO"
+		resultType="com.path.dbmaps.vo.MachineVO">
+		SELECT machine_id FROM machine WHERE
+		plate_number
+		=#{plate_number,jdbcType=VARCHAR}
+	</select>
+
+
+	<select id="returnAdmin"
+		parameterType="com.path.dbmaps.vo.AdminVO"
+		resultType="com.path.dbmaps.vo.AdminVO">
+		SELECT * FROM admin WHERE
+		name
+		=#{name,jdbcType=NUMERIC}
+	</select>
+
+	<select id="returnAdminUsername"
+		parameterType="com.path.dbmaps.vo.AdminCO"
+		resultType="com.path.dbmaps.vo.AdminVO">
+		SELECT * FROM admin WHERE
+		username
+		=#{username,jdbcType=NUMERIC}
+	</select>
+
+
+	<select id="returnAdminUsernameComb"
+		parameterType="com.path.dbmaps.vo.AdminCO"
+		resultType="com.path.dbmaps.vo.Admin_deviceVO">
+		SELECT * FROM admin_device WHERE
+		admin_id= (select admin_id
+		from admin where
+		username=#{username,jdbcType=VARCHAR})
+	</select>
+
+	<!-- <select id="returnCombAdminDevice" -->
+	<!-- parameterType="com.path.dbmaps.vo.AdminCO" -->
+	<!-- resultType="com.path.dbmaps.vo.Admin_deviceVO"> -->
+	<!-- SELECT * FROM admin_device dd -->
+	<!-- WHERE admin_id = (select -->
+	<!-- admin_id from admin where username = -->
+	<!-- #{username,jdbcType=VARCHAR}) -->
+	<!-- AND -->
+	<!-- device_id = (select device_admin_id -->
+	<!-- from deviceadmin where device_UUID -->
+	<!-- =#{device_UUID,jdbcType=VARCHAR} ) -->
+
+	<!-- </select> -->
+
+	<select id="returnCombAdminDevice"
+		parameterType="com.path.dbmaps.vo.AdminCO"
+		resultType="com.path.dbmaps.vo.Admin_deviceVO">
+		SELECT * FROM admin_device dd
+		WHERE admin_id = (select
+		admin_id from admin where username =
+		#{username,jdbcType=VARCHAR})
+		AND
+		device_id = (select device_id
+		from device where device_UUID
+		=#{device_UUID,jdbcType=VARCHAR} )
+
+	</select>
+
+	<select id="returnIfMachineDriverIsReserved"
+		parameterType="com.path.dbmaps.vo.MachineDriverSC"
+		resultType="com.path.dbmaps.vo.ReservationListVO">
+		select reservation_list_id, reservation_id,machine_driver_id,date,
+		time,reservation_list_status
+		from
+		reservation_list where
+		machine_driver_id
+		=(select
+		machine_driver_id
+		from
+		machine_driver where
+		<if test="machine_id != 0">
+			machine_id
+			= #{machine_id,jdbcType=NUMERIC}
+		</if>
+		<if test="driver_id != 0">
+			driver_id = #{driver_id,jdbcType=NUMERIC}
+		</if>
+		)
+		and date= #{date,jdbcType=TIMESTAMP}
+		and time >=
+		#{time,jdbcType=TIMESTAMP}
+	</select>
+
+	<select id="returnCombinationUsernameDeviceAdmin"
+		parameterType="com.path.dbmaps.vo.AdminCO"
+		resultType="com.path.dbmaps.vo.AdminCO">
+		SELECT ad.* , a.username FROM admin_device ad , admin a
+		WHERE
+		ad.admin_id =
+		#{admin_id,jdbcType=NUMERIC}
+		AND
+		ad.device_id =
+		(SELECT
+		device_id
+		FROM
+		device where device_UUID =
+		#{device_UUID,jdbcType=NUMERIC})
+		and ad.admin_id = a.admin_id
+	</select>
+
+
+
+	<resultMap id="returnListReservationsDiffFinishAdminMap"
+		type="com.path.dbmaps.vo.ReservationSC">
+		<result column="name" property="driver_name" />
+<!-- 		<result column="mobile_number" property="driver_mobile_number" /> -->
+		<result column="date" property="date" />
+		<result column="time" property="time" />
+		<result column="reservation_list_status"
+			property="reservation_list_status" />
+		<result property="distance" column="distance" />
+		<result property="username" column="username" />
+	</resultMap>
+
+	<select id="returnListReservationsDiffFinishAdmin"
+		parameterType="com.path.dbmaps.vo.ReservationVO"
+		resultMap="returnListReservationsDiffFinishAdminMap">
+		select rl.reservation_id, c.username , d.name , c.mobile_number ,
+		rl.date ,
+		rl.time ,rl.reservation_list_status , rl.quickReservationType
+		, rl.nbOfClient
+		from reservation r , reservation_list rl , driver d ,
+		client c ,
+		machine_driver md
+		where 
+<!-- 		rl.date = #{date,jdbcType=TIMESTAMP} -->
+<!-- 		and -->
+		r.reservation_id = rl.reservation_id
+		and c.client_id = r.client_id
+		and rl.machine_driver_id = md.machine_driver_id
+		and md.driver_id =
+		d.driver_id
+		and (rl.reservation_list_status <![CDATA[ <> ]]>4)
+		and (rl.date between #{date_from,jdbcType=TIMESTAMP} and #{date_to,jdbcType=TIMESTAMP})
+	</select>
+
+
+
+
+	<resultMap id="returnListReservationsFinishAdminMap"
+		type="com.path.dbmaps.vo.ReservationSC">
+		<result column="name" property="driver_name" />
+<!-- 		<result column="mobile_number" property="driver_mobile_number" /> -->
+		<result column="date" property="date" />
+		<result column="time" property="time" />
+		<result column="reservation_list_status"
+			property="reservation_list_status" />
+		<result property="distance" column="distance" />
+		<result property="username" column="username" />
+		<result property="cost" column="cost" />
+		<result property="costByDriver" column="costByDriver" />
+		<result property="numberOfClient" column="numberOfClient" />
+		<result property="totalCostByDriver" column="totalCostByDriver" />
+	</resultMap>
+
+	<select id="returnListReservationsFinishAdmin"
+		parameterType="com.path.dbmaps.vo.ReservationVO"
+		resultMap="returnListReservationsFinishAdminMap">
+
+		select rl.reservation_id, c.username , d.name ,
+		c.mobile_number , rl.date ,
+		rl.time , f.cost , f.costByDriver ,
+		f.totalCostByDriver
+		, rl.reservation_list_status ,
+		rl.nbOfClient,
+		rl.distanceTakeWait ,
+		rl.distanceStartFinish ,
+		(rl.distanceTakeWait +
+		rl.distanceStartFinish)
+		AS distance
+		from reservation r , reservation_list rl , driver d ,
+		client c ,
+		machine_driver md , facture f
+		where
+<!-- 		rl.date = -->
+<!-- 		#{date,jdbcType=TIMESTAMP} -->
+<!-- 		and -->
+		 rl.reservation_id = r.reservation_id
+		and
+		r.client_id = c.client_id
+		and md.machine_driver_id =
+		rl.machine_driver_id
+		and d.driver_id = md.driver_id
+		and
+		f.reservation_list_id = rl.reservation_list_id
+		and
+		rl.reservation_list_status = 4
+
+		and (rl.date between #{date_from,jdbcType=TIMESTAMP} and #{date_to,jdbcType=TIMESTAMP})
+
+	</select>
+
+	<select id="returnMaintenance"
+		parameterType="com.path.dbmaps.vo.Machine_mntCO"
+		resultType="com.path.dbmaps.vo.Machine_mntCO">
+		select mn.* , d.name from machine_mnt mn , driver d ,
+		machine_driver md
+		where
+		mn.machine_driver_id = md.machine_driver_id
+		and
+		md.driver_id = d.driver_id and
+		mn.date = #{date,jdbcType=TIMESTAMP}
+	</select>
+
+
+	<select id="returnCompaniesList"
+		parameterType="com.path.dbmaps.vo.CompaniesCO"
+		resultType="com.path.dbmaps.vo.CompaniesVO">
+		select * from companies
+	</select>
+
+
+
+	<select id="returnCompany"
+		parameterType="com.path.dbmaps.vo.CompaniesCO"
+		resultType="com.path.dbmaps.vo.CompaniesVO">
+		select * from companies where company_name =
+		#{company_name,jdbcType=VARCHAR}
+	</select>
+
+
+	<select id="returnListOfFactures"
+		parameterType="com.path.dbmaps.vo.ReservationSC"
+		resultType="com.path.dbmaps.vo.ReservationSC">
+		select rl.* , r.* , f.* from reservation r ,
+		reservation_list rl, facture f
+		where rl.reservation_id =
+		r.reservation_id
+		and f.reservation_list_id = rl.reservation_list_id
+		and
+		paid = #{paid,jdbcType=VARCHAR}
+	</select>
+
+	<select id="returnListPropertiesWithCategories"
+		parameterType="com.path.dbmaps.vo.PropertiesVO"
+		resultType="com.path.dbmaps.vo.PropertiesSC">
+		select p.* , plov.key_value
+		from properties p, paramlov plov
+		where category = plov.paramlov_id
+		order by category asc
+	</select>
+	
+	<select id="returnListOfMachines"
+		parameterType="com.path.dbmaps.vo.MachineVO"
+		resultType="com.path.dbmaps.vo.MachineVO">
+		select * from machine 
+	</select>
+
+	
+</mapper>

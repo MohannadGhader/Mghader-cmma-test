@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<bean id="omniCommonPullDAO"
+		class="com.path.dao.omni.common.pull.impl.OmniCommonPullDAOImpl"
+		parent="omniBaseDAO">
+	</bean>
+	<bean id="omniDriverPullDAO"
+		class="com.path.dao.omni.driver.pull.impl.OmniDriverPullDAOImpl"
+		parent="omniBaseDAO">
+	</bean>
+	
+	<bean id="omniClientPullDAO"
+		class="com.path.dao.omni.client.pull.impl.OmniClientPullDAOImpl"
+		parent="omniBaseDAO">
+	</bean>
+	
+	<bean id="omniAdminPullDAO"
+		class="com.path.dao.omni.admin.pull.impl.OmniAdminPullDAOImpl"
+		parent="omniBaseDAO">
+	</bean>
+</beans>

@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="omniClientPushMapper">
+
+<!-- 	<insert id="insertUsernameMobileNumber"
+		parameterType="com.path.dbmaps.vo.ClientCO" useGeneratedKeys="true"
+		keyProperty="client_id">
+		INSERT INTO client(mobile_number, username,
+		 free_trip,
+		active)
+		VALUES (
+		#{mobile_number,jdbcType=VARCHAR},
+		#{username,jdbcType=VARCHAR},
+		#{free_trip,jdbcType=VARCHAR},
+		#{active,jdbcType=VARCHAR}
+		)
+	</insert> -->
+
+	<insert id="insertUsernamePass"
+		parameterType="com.path.dbmaps.vo.ClientCO" useGeneratedKeys="true"
+		keyProperty="client_id">
+		INSERT INTO client(mobile_number, username, password,
+		salt, gender)
+		VALUES (
+		#{mobile_number,jdbcType=VARCHAR},
+		#{username,jdbcType=VARCHAR},
+		#{password,jdbcType=VARCHAR},
+		#{salt,jdbcType=VARCHAR},
+		#{gender,jdbcType=NUMERIC}
+		)
+	</insert>
+
+
+
+	<insert id="insertSim"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		INSERT INTO sim
+		(sim_serial,mobile_number,country_id,country_name)
+		VALUES
+		(
+		#{sim_serial,jdbcType=NUMERIC},
+		#{mobile_number,jdbcType=VARCHAR},
+		#{country_id,jdbcType=NUMERIC},
+		#{country_name,jdbcType=VARCHAR}
+		)
+
+	</insert>
+
+
+
+
+	<update id="updateDeviceToken"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		UPDATE device SET
+		device_token
+		=#{device_token,jdbcType=VARCHAR}
+		WHERE
+		device_UUID=#{device_UUID,jdbcType=VARCHAR}
+	</update>
+
+	<insert id="insertCombination"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+
+		insert into client_device(client_id ,
+		device_id)
+		values(
+		(select client_id from client where username=
+		#{username,jdbcType=VARCHAR} and mobile_number =
+		#{mobile_number,jdbcType=VARCHAR}) ,
+		(select device_id from device
+		where
+		device_UUID=
+		#{device_UUID,jdbcType=NUMERIC} ))
+	</insert>
+
+
+
+	<update id="updateInactiveClient"
+		parameterType="com.path.dbmaps.vo.ClientVO">
+		UPDATE client SET
+		active = #{active,jdbcType=NUMERIC} , 
+		free_trip =  #{free_trip,jdbcType=NUMERIC} 
+		WHERE
+		client_id = #{client_id,jdbcType=NUMERIC}
+	</update>
+
+
+	<update id="updateClientStatus"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		UPDATE client_device SET
+		client_status=#{client_status,jdbcType=NUMERIC}
+		WHERE
+		device_id =
+		(select device_id from device where device_UUID =
+		#{device_UUID,jdbcType=NUMERIC} )
+		<!-- <if test="username != null"> -->
+		<!-- and client_id = (select client_id from client where -->
+		<!-- username = -->
+		<!-- #{username,jdbcType=VARCHAR}) -->
+		<!-- </if> -->
+		<!-- <if test="client_id != null"> -->
+		and client_id = #{client_id,jdbcType=NUMERIC}
+		<!-- </if> -->
+	</update>
+
+	<update id="updateCombination"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		UPDATE client_device SET
+		device_id = (select device_id
+		from
+		device where device_UUID = #{device_UUID,jdbcType=VARCHAR})
+		WHERE
+		client_id=(select client_id from client where username=
+		#{username,jdbcType=VARCHAR})
+	</update>
+
+
+	<delete id="deleteReservation"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		DELETE r.* , rl.* from reservation r, reservation_list
+		rl
+		WHERE r.reservation_id = rl.reservation_id and
+		rl.reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+	</delete>
+
+	<insert id="insertRating"
+		parameterType="com.path.dbmaps.vo.RateVO">
+		INSERT INTO rate
+		(reservation_id, machine_id, driver_id,
+		machine_rating, driver_rating, machine_comment, driver_comment)
+		values(
+		#{reservation_id,jdbcType=NUMERIC},
+		#{machine_id,jdbcType=NUMERIC},
+		#{driver_id,jdbcType=NUMERIC},
+		#{machine_rating,jdbcType=NUMERIC},
+		#{driver_rating,jdbcType=NUMERIC},
+		#{machine_comment,jdbcType=VARCHAR},
+		#{driver_comment,jdbcType=VARCHAR} )
+	</insert>
+
+
+
+
+	<update id="updateClientInfos"
+		parameterType="com.path.dbmaps.vo.ClientVO">
+		UPDATE client SET
+		name=#{name,jdbcType=VARCHAR}
+		WHERE
+		client_id= #{client_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updatePassword"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		UPDATE client SET
+		salt=#{salt,jdbcType=VARCHAR},
+		password=#{password,jdbcType=VARCHAR}
+		WHERE
+		client_id=#{client_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="resetPassword"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		UPDATE client SET
+		salt=#{salt,jdbcType=VARCHAR},
+		password=#{password,jdbcType=VARCHAR}
+		WHERE
+		username=#{username,jdbcType=VARCHAR}
+	</update>
+
+	<!-- <insert id="insertDestination" -->
+	<!-- parameterType="com.path.dbmaps.vo.List_destinationsVO"> -->
+	<!-- INSERT INTO list_destinations (nickname , client_id , -->
+	<!-- latitude , longitude) -->
+	<!-- values (#{nickname,jdbcType=VARCHAR}, -->
+	<!-- #{client_id,jdbcType=NUMERIC}, -->
+	<!-- #{latitude,jdbcType=NUMERIC}, -->
+	<!-- #{longitude,jdbcType=NUMERIC} -->
+	<!-- ) -->
+
+	<!-- </insert> -->
+
+
+	<update id="updateProfile"
+		parameterType="com.path.dbmaps.vo.ClientVO">
+		update client set profile=#{profile,jdbcType=VARCHAR}
+		WHERE client_id =#{client_id,jdbcType=NUMERIC}
+	</update>
+
+	<delete id="deleteCombinationDeviceUsername"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		DELETE from client_device
+		WHERE client_id =
+		#{client_id,jdbcType=NUMERIC}
+		and device_id =
+		#{device_id,jdbcType=NUMERIC}
+	</delete>
+
+	<update id="updateLastLoginClient"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		update client set last_login_client =
+		#{last_login_client,jdbcType=TIMESTAMP}
+		WHERE client_id=
+		#{client_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updateLastLoginClientDevice"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		update client_device set last_login =
+		#{last_login,jdbcType=TIMESTAMP}
+		WHERE client_id=
+		#{client_id,jdbcType=NUMERIC}
+		AND device_id = (SELECT device_id FROM
+		device WHERE device_UUID =
+		#{device_UUID,jdbcType=VARCHAR} )
+	</update>
+
+
+
+	<insert id="insertListReservationList"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		insert into reservation_list (reservation_id ,
+		machine_driver_id , date
+		, time,
+		time_slot) select
+		(select reservation_id
+		from reservation where
+		client_id=
+		#{client_id,jdbcType=NUMERIC} and
+		<if test="occurrence_type == 1">
+			date=#{start_date,jdbcType=TIMESTAMP} and time
+			=#{start_time,jdbcType=TIMESTAMP}
+		</if>
+		<if test="occurrence_type == 2">
+			date=#{date,jdbcType=TIMESTAMP} and time
+			=#{time,jdbcType=TIMESTAMP}
+		</if>
+		),
+		machine_driver_id , date , time,
+		time_slot from temporary_reservation
+		where
+		temp_reservation_id
+		=#{temp_reservation_id,jdbcType=TIMESTAMP}
+	</insert>
+
+	<update id="updateDeviceStatus"
+		parameterType="com.path.dbmaps.vo.DeviceSC">
+		update device set device_status =
+		#{device_status,jdbcType=NUMERIC}
+		WHERE device_UUID=
+		#{device_UUID,jdbcType=VARCHAR}
+	</update>
+
+
+
+	<insert id="insertCancelReservation"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		INSERT INTO cancel_reservation (client_id , date)
+		values
+		(
+		#{client_id,jdbcType=NUMERIC},
+		#{date,jdbcType=TIMESTAMP}
+		)
+
+	</insert>
+
+
+	<update id="updateCombinationUsernameMobileNumberDevice"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		<!-- update client_device -->
+		<!-- set device_id =(select device_id -->
+		<!-- from -->
+		<!-- device where device_UUID =#{device_UUID,jdbcType=VARCHAR} ) -->
+		<!-- WHERE client_id= -->
+		<!-- #{client_id,jdbcType=NUMERIC} -->
+		update client_device
+		set client_id = #{client_id,jdbcType=NUMERIC}
+		where device_id = (select device_id from device
+		where device_UUID =#{device_UUID,jdbcType=VARCHAR} )
+	</update>
+
+
+	<insert id="insertRecurringReservationEachDay"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+
+
+		INSERT INTO reservation_list (reservation_id, date, time , time_slot,
+		reservation_list_status ,
+		dateOfCreateReservation,
+		timeOfCreateReservation,reservation_time_status,penalty_status,nbOfClient,
+		machine_driver_id)
+		values (
+		#{reservation_id,jdbcType=NUMERIC},
+		#{date,jdbcType=TIMESTAMP},
+		#{time,jdbcType=TIMESTAMP},
+		#{time_slot,jdbcType=TIMESTAMP},
+		#{reservation_list_status,jdbcType=TIMESTAMP},
+		#{dateOfCreateReservation,jdbcType=TIMESTAMP},
+		#{timeOfCreateReservation,jdbcType=TIMESTAMP},
+		#{reservation_time_status,jdbcType=TIMESTAMP},
+		#{penalty_status,jdbcType=NUMERIC},
+		#{nbOfClient,jdbcType=NUMERIC},
+		(select machine_driver_id from
+		(select machine_driver_id from
+		machine_driver where machine_driver_id not in
+		(select machine_driver_id
+		from reservation_list rl
+		where date =
+		#{date,jdbcType=TIMESTAMP}
+		and
+		(time between #{time,jdbcType=TIMESTAMP}
+		and
+		#{time_slot,jdbcType=TIMESTAMP}
+		or time_slot between
+		#{time,jdbcType=TIMESTAMP} and #{time_slot,jdbcType=TIMESTAMP})
+		and
+		rl.reservation_list_status <![CDATA[ <> ]]>
+		8
+		and rl.reservation_list_status <![CDATA[ <> ]]>
+		9
+		and rl.reservation_list_status <![CDATA[ <> ]]>
+		6
+		and rl.reservation_list_status <![CDATA[ <> ]]>
+		4
+		and rl.reservation_list_status <![CDATA[ <> ]]>
+		5
+		and rl.reservation_list_status  <![CDATA[ <> ]]>
+		11)
+		and machine_driver_id in (
+		select machine_driver_id from
+		working_hours
+		where
+		is_holiday= 1 and is_weekend
+		= 1
+		and
+		(select
+		dayofweek(#{date,jdbcType=TIMESTAMP}) ) <![CDATA[ <> ]]>
+		weekend and
+		((select dayofweek( #{date,jdbcType=TIMESTAMP}) )between
+		start_day and
+		end_day)
+		)
+		limit 1)as d )
+		)
+
+	</insert>
+
+
+
+	<update id="updateDestinationName"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		update reservation set destination_name =
+		#{destination_name,jdbcType=VARCHAR}
+		where reservation_id =
+		(select
+		reservation_id from reservation_list where
+		reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+		)
+	</update>
+
+	<update id="updateReservationStatus"
+		parameterType="com.path.dbmaps.vo.ReservationVO">
+		update reservation set reservation_status =
+		#{reservation_status,jdbcType=VARCHAR}
+		where reservation_id =
+		#{reservation_id,jdbcType=NUMERIC}
+
+	</update>
+
+
+	<update id="updateUsernameMobileNumber"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		update client set username =
+		#{username,jdbcType=VARCHAR}
+
+		where mobile_number =
+		#{mobile_number,jdbcType=VARCHAR}
+
+	</update>
+
+
+
+
+
+	<insert id="insertIntoInvitedContact"
+		parameterType="com.path.dbmaps.vo.InvitedContactVO">
+		INSERT INTO invited_contact (client_id ,
+		inivited_mobile_number, invited_date)
+		values (
+		#{client_id,jdbcType=NUMERIC},
+		#{inivited_mobile_number,jdbcType=VARCHAR},
+		#{invited_date,jdbcType=TIMESTAMP}
+		)
+
+	</insert>
+
+	<update id="updateNbOfReservation"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		update reservation_list set
+		nb_of_reservation =
+		#{nb_of_reservation,jdbcType=NUMERIC}
+		where reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+
+	</update>
+
+	<update id="addNbOfFreeTrip"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		update client set
+		free_trip = (select * from (select
+		free_trip from client
+		where mobile_number =
+		#{mobile_number,jdbcType=VARCHAR} and active =
+		#{active,jdbcType=NUMERIC}) as a) + 1
+		where
+		mobile_number =
+		#{mobile_number,jdbcType=VARCHAR}
+		and active =
+		#{active,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updateReferenceName"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		UPDATE client
+		set
+		reference_name =
+		#{reference_name,jdbcType=VARCHAR}
+		where
+		client_id =
+		#{client_id,jdbcType=NUMERIC}
+	</update>
+
+	<update
+		id="updateReservationListStatusToCanceledAndBrokerReservation"
+		parameterType="com.path.dbmaps.vo.ReservationSC">
+		UPDATE reservation_list
+		set
+		reservation_list_status =
+		#{reservation_list_status,jdbcType=VARCHAR},
+		cancel =
+		#{cancel,jdbcType=NUMERIC}
+		where
+		reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+	
+	<insert id="addUser"
+		parameterType="com.path.dbmaps.vo.ClientVO" useGeneratedKeys="true"
+		keyProperty="client_id">
+		INSERT INTO client (name ,
+		username, mobile_number,profile,gender,last_login_client)
+		values (
+		#{name,jdbcType=VARCHAR},
+		#{mobile_number,jdbcType=VARCHAR},
+		#{profile,jdbcType=VARCHAR},
+		#{gender,jdbcType=NUMERIC},
+		#{last_login_client,jdbcType=TIMESTAMP}
+		)
+
+	</insert>
+
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+ 
+ 	<!-- Common -->
+     <bean name="omniCommonBOService" factory-bean="pathBeanFactoryExporter"  factory-method="export" >
+		<constructor-arg name="serviceName" value="omniCommonBOService" />
+		<constructor-arg name="service" ref="omniCommonBO" />
+		<constructor-arg name="serviceInterface" value="com.path.bo.omni.common.OmniCommonBO" />		
+	</bean>
+ 	<!-- channelLoginBOService -->
+     <bean name="channelLoginBOService" factory-bean="pathBeanFactoryExporter"  factory-method="export" >
+		<constructor-arg name="serviceName" value="channelLoginBOService" />
+		<constructor-arg name="service" ref="channelLoginBO" />
+		<constructor-arg name="serviceInterface" value="com.path.bo.omni.common.ChannelLoginBO" />		
+	</bean>
+	 	 
+</beans>

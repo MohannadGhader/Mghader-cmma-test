@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<bean id="omniCommonPushDAO"
+		class="com.path.dao.omni.common.push.impl.OmniCommonPushDAOImpl"
+		parent="omniBaseDAO"></bean>
+
+	<bean id="omniDriverPushDAO"
+		class="com.path.dao.omni.driver.push.impl.OmniDriverPushDAOImpl"
+		parent="omniBaseDAO"></bean>
+		
+	<bean id="omniClientPushDAO"
+		class="com.path.dao.omni.client.push.impl.OmniClientPushDAOImpl"
+		parent="omniBaseDAO"></bean>
+		
+		<bean id="omniAdminPushDAO"
+		class="com.path.dao.omni.admin.push.impl.OmniAdminPushDAOImpl"
+		parent="omniBaseDAO"></bean>
+</beans>

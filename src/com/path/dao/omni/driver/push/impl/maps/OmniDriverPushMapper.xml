@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="omniDriverPushMapper">
+
+<!-- 	<insert id="insertDriverDeviceCombination" -->
+<!-- 		parameterType="com.path.dbmaps.vo.DriverCO"> -->
+
+<!-- 		INSERT INTO -->
+<!-- 		driver_device(driver_status,driver_id,device_id) select -->
+<!-- 		#{driver_status,jdbcType=NUMERIC}, -->
+<!-- 		dr.driver_id, d.device_driver_id -->
+<!-- 		from devicedriver d,driver dr WHERE -->
+<!-- 		d.device_UUID=#{device_UUID,jdbcType=VARCHAR} and -->
+<!-- 		dr.username=#{username,jdbcType=VARCHAR} -->
+<!-- 	</insert> -->
+		<insert id="insertDriverDeviceCombination"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+
+		INSERT INTO
+		driver_device(driver_status,driver_id,device_id) select
+		#{driver_status,jdbcType=NUMERIC},
+		dr.driver_id, d.device_id
+		from device d,driver dr WHERE
+		d.device_UUID=#{device_UUID,jdbcType=VARCHAR} and
+		dr.username=#{username,jdbcType=VARCHAR}
+	</insert>
+
+	<update id="updateDeviceDriverToken"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		update devicedriver set device_token =
+		#{device_token,jdbcType=VARCHAR}
+		WHERE device_UUID =
+		#{device_UUID,jdbcType=VARCHAR}
+	</update>
+
+
+	<update id="updateDriverDeviceStatus"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		update driver_device set driver_status =
+		#{driver_status,jdbcType=NUMERIC}
+		where
+		device_id= (SELECT device_id
+		from device WHERE device_UUID =
+		#{device_UUID,jdbcType=VARCHAR} )
+		and
+		<if test="username != null">
+			driver_id = (SELECT driver_id FROM driver WHERE username =
+			#{username,jdbcType=VARCHAR} )
+		</if>
+		<if test="driver_id != 0">
+			driver_id = #{driver_id,jdbcType=NUMERIC}
+		</if>
+	</update>
+
+
+	<update id="updateTimeSlot"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		update reservation_list set time_slot =#{time_slot,jdbcType=TIMESTAMP}
+<!-- 		addtime(#{time_slot,jdbcType=TIMESTAMP},#{time,jdbcType=TIMESTAMP}) -->
+		WHERE reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updatePasswordDriver"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		UPDATE driver SET
+		salt=#{salt,jdbcType=VARCHAR},
+		password=#{password,jdbcType=VARCHAR}
+		WHERE
+		driver_id=#{driver_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updateDriverDeviceCombination"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		UPDATE driver_device SET
+		driver_id=(select driver_id from
+		driver where username =
+		#{username,jdbcType=VARCHAR}),
+		device_id=(select device_id from
+		device where device_UUID
+		= #{device_UUID,jdbcType=VARCHAR})
+		WHERE
+		driver_device_id=#{driver_device_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="resetPasswordDriver"
+		parameterType="com.path.dbmaps.vo.DriverVO">
+		UPDATE driver SET
+		salt=#{salt,jdbcType=VARCHAR},
+		password=#{password,jdbcType=VARCHAR}
+		WHERE
+		username=#{username,jdbcType=VARCHAR}
+	</update>
+
+<!-- 	<update id="updateMachineLocation" -->
+<!-- 		parameterType="com.path.dbmaps.vo.DriverCO"> -->
+<!-- 		UPDATE machine_driver_location SET -->
+<!-- 		latitude=#{latitude,jdbcType=NUMERIC} , -->
+<!-- 		longitude=#{longitude,jdbcType=NUMERIC} -->
+<!-- 		WHERE -->
+<!-- 		machine_driver_id  =(select machine_driver_id from  -->
+<!-- 				machine_driver where driver_id = #{driver_id,jdbcType=NUMERIC} -->
+<!-- 				) -->
+		
+<!-- 	</update> -->
+
+	<update id="updateLastLoginDriver"
+		parameterType="com.path.dbmaps.vo.ClientCO">
+		update driver set last_login_driver =
+		#{last_login_driver,jdbcType=TIMESTAMP} , 
+		on_off = #{on_off,jdbcType=NUMERIC} 
+		WHERE username=
+		#{username,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updateProfileDriver"
+		parameterType="com.path.dbmaps.vo.DriverVO">
+		update driver set profile =
+		#{profile,jdbcType=VARCHAR}
+		WHERE driver_id=
+		#{driver_id,jdbcType=NUMERIC}
+	</update>
+
+
+	<update id="updateLocationToClient"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		update reservation set
+		longitude_to
+		=#{longitude_to,jdbcType=NUMERIC},
+		latitude_to =
+		#{latitude_to,jdbcType=NUMERIC}
+		WHERE reservation_id=
+		#{reservation_id,jdbcType=NUMERIC}
+	</update>
+
+
+
+	<update id="updateMachineDriverReservationLocations"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		update reservation set
+		machine_driver_longitude
+		=#{longitude,jdbcType=NUMERIC},
+		machine_driver_latitude =
+		#{latitude,jdbcType=NUMERIC}
+		WHERE reservation_id= (select
+		reservation_id from reservation_list
+		where reservation_list_id
+		=#{reservation_list_id,jdbcType=NUMERIC})
+
+	</update>
+	<update id="updateClientMobileNumberReservation"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		UPDATE reservation_list SET
+		clientMobileNumber
+		=#{clientMobileNumber,jdbcType=NUMERIC}
+		WHERE
+		reservation_list_id=#{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+
+	<!-- <insert id="insertMachineDriverLocationReservation" -->
+	<!-- parameterType="com.path.dbmaps.vo.MachineDriverLocationVO"> -->
+	<!-- insert into machine_driver_location (machine_driver_id , -->
+	<!-- reservation_list_id , longitude , latitude , -->
+	<!-- reservation_location_status) -->
+	<!-- values ( -->
+	<!-- #{machine_driver_id,jdbcType=VARCHAR}, -->
+	<!-- #{reservation_list_id,jdbcType=VARCHAR}, -->
+	<!-- #{longitude,jdbcType=VARCHAR}, -->
+	<!-- #{latitude,jdbcType=VARCHAR}, -->
+	<!-- #{reservation_location_status,jdbcType=VARCHAR} -->
+	<!-- ) -->
+	<!-- </insert> -->
+
+
+	<update id="updateMachineDriverLocation"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		UPDATE machine_driver SET
+		longitude
+		=#{longitude,jdbcType=NUMERIC},
+		latitude
+		=#{latitude,jdbcType=NUMERIC},
+<!-- 		reservation_location_status -->
+<!-- 		=#{reservation_location_status,jdbcType=NUMERIC}, -->
+		date
+		=#{date,jdbcType=TIMESTAMP} ,
+		time =#{time,jdbcType=TIMESTAMP}
+<!-- 		, -->
+<!-- 		reservation_list_id =#{reservation_list_id,jdbcType=NUMERIC} -->
+		WHERE
+		driver_id=
+		#{driver_id,jdbcType=NUMERIC}
+	</update>
+
+
+	<insert id="insertNewLocationDriver"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+
+		INSERT INTO machine_driver_location
+		(machine_driver_id , reservation_list_id , latitude , longitude , reservation_location_status , date , time)
+		values (
+		(select machine_driver_id from machine_driver where driver_id = #{driver_id,jdbcType=NUMERIC}),
+		#{reservation_list_id,jdbcType=NUMERIC},
+		#{latitude,jdbcType=NUMERIC},
+		#{longitude,jdbcType=NUMERIC},
+		#{reservation_location_status,jdbcType=NUMERIC},
+		#{date,jdbcType=NUMERIC},
+		#{time,jdbcType=NUMERIC}
+		)
+		
+	</insert>
+
+	<update id="updateDistanceStartFinish"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		UPDATE reservation_list set
+		distanceStartFinish =
+		#{distanceStartFinish,jdbcType=NUMERIC}
+		,
+<!-- 		distanceStartFinishTesting = #{distanceStartFinishTesting,jdbcType=NUMERIC}, -->
+		locationsArray = #{locationsArray,jdbcType=NUMERIC}
+<!-- 		, -->
+<!-- 		distanceStartFinishTestingDefault = #{distanceStartFinishTestingDefault,jdbcType=NUMERIC} -->
+		where reservation_list_id =
+		#{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+
+	<update id="updateTakeWait"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		UPDATE reservation_list
+		set distanceTakeWait = #{distanceTakeWait,jdbcType=NUMERIC}
+		where
+		reservation_list_id = #{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+	
+	<insert id="insertfacture"
+		parameterType="com.path.dbmaps.vo.FactureVO">
+
+		insert into facture (reservation_list_id , cost, numberOfClient,
+		costByDriver , totalCostByDriver, costFormule 
+		, costTesting , costTestingFormule, paid
+		)
+		select 
+		#{reservation_list_id,jdbcType=NUMERIC} ,
+		#{cost,jdbcType=NUMERIC} ,
+		#{numberOfClient,jdbcType=NUMERIC} , 
+		#{costByDriver,jdbcType=NUMERIC}, 
+		#{totalCostByDriver,jdbcType=NUMERIC},
+		#{costFormule,jdbcType=NUMERIC}
+		,
+		#{costTesting,jdbcType=NUMERIC},
+		#{costTestingFormule,jdbcType=NUMERIC},
+		#{paid,jdbcType=NUMERIC}
+		
+		where NOT EXISTS (SELECT reservation_list_id 
+            FROM facture 
+            WHERE reservation_list_id = #{reservation_list_id,jdbcType=NUMERIC})
+	</insert>
+	
+	
+	
+	
+	<insert id="insertMaintenance"
+		parameterType="com.path.dbmaps.vo.Machine_mntCO">
+		insert into machine_mnt (machine_driver_id, mnt_type,
+		amount,
+		description, pic_of_facture , date , time)
+		value (
+		(select machine_driver_id from
+		machine_driver where driver_id = #{driver_id,jdbcType=NUMERIC}),
+		#{mnt_type,jdbcType=NUMERIC},
+		#{amount,jdbcType=NUMERIC},
+		#{description,jdbcType=VARCHAR},
+		#{pic_of_facture,jdbcType=VARCHAR},
+		#{date,jdbcType=TIMESTAMP},
+		#{time,jdbcType=TIMESTAMP}
+		)
+	</insert>
+	
+	
+	
+	<update id="updateDriverStatus"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		UPDATE driver
+		set on_off = #{on_off,jdbcType=NUMERIC}
+		where
+		driver_id = #{driver_id,jdbcType=NUMERIC}
+	</update>
+	
+	
+	<update id="updateNbOfClient"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		UPDATE reservation_list
+		set nbOfClient = #{nbOfClient,jdbcType=NUMERIC}
+		where
+		reservation_list_id = #{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+	
+	
+	
+	<update id="updateCostByDriver"
+		parameterType="com.path.dbmaps.vo.ReservationSC">
+		UPDATE facture f
+		set f.totalCostByDriver = #{totalCostByDriver,jdbcType=NUMERIC}
+		where
+		f.reservation_list_id = #{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+	
+	
+	
+	<insert id="insertSendedNotification"
+		parameterType="com.path.dbmaps.vo.Sended_notificationVO">
+		insert into sended_notification (machine_driver_location_id, notification_id,
+		date,time)
+		value (
+		#{machine_driver_location_id,jdbcType=TIMESTAMP},
+		#{notification_id,jdbcType=TIMESTAMP},
+		#{date,jdbcType=TIMESTAMP},
+		#{time,jdbcType=TIMESTAMP}
+		)
+	</insert>
+	
+	
+	
+	<insert id="insertTrackingAvailabily"
+		parameterType="com.path.dbmaps.vo.DriverCO">
+		insert into driver_availability (driver_id,
+		on_off,date,time)
+		value (
+		#{driver_id,jdbcType=NUMERIC},
+		#{on_off,jdbcType=NUMERIC},
+		#{date,jdbcType=TIMESTAMP},
+		#{time,jdbcType=TIMESTAMP}
+		)
+	</insert>
+	
+	
+	<update id="updateKilometrage"
+		parameterType="com.path.dbmaps.vo.ReservationCO">
+		UPDATE reservation_list
+		set
+		<if test="kilometrageTake != 0">
+		 kilometrageTake = #{kilometrageTake,jdbcType=NUMERIC}
+		 </if>
+		 <if test="kilometrageStart != 0">
+		 kilometrageStart = #{kilometrageStart,jdbcType=NUMERIC}
+		 </if>
+		 <if test="kilometrageFinish != 0">
+		 kilometrageFinish = #{kilometrageFinish,jdbcType=NUMERIC}
+		 </if>
+		where
+		reservation_list_id = #{reservation_list_id,jdbcType=NUMERIC}
+	</update>
+</mapper>

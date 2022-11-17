@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+   
+    <!-- we need to have this bean definition here in order to read values from property file  -->
+	<bean  parent="propertyPlaceholderConfigurer" />
+ 	
+ 	<!-- the alert borker -->
+	
+	<!-- the activeMQ connection factory -->
+	<!-- <bean id="alertsConnectionFactoryTCP" class="org.apache.activemq.spring.ActiveMQConnectionFactory" depends-on="alertsBrokerBO">
+		<property name="brokerURL" value="${alert.broker.url}"/>
+		 
+		by default = true
+		<property name="watchTopicAdvisories" value="false"/>
+		by default = true
+		<property name="checkForDuplicates" value="false" />
+		by default = true
+		<property name="copyMessageOnSend" value="false" />
+		by default = false
+		<property name="optimizeAcknowledge" value="true" />
+		by default = true
+		<property name="dispatchAsync" value="false" />
+		by default = true
+		<property name="alwaysSessionAsync" value="false" />
+		by default = false
+		<property name="useAsyncSend" value="false" />
+		by default = false
+		<property name="alwaysSyncSend" value="true" />
+		
+	</bean>
+	
+	the SingleConnectionFactory is used to create non cached sessions
+	<bean id="alertsSingleConnectionFactoryTCP" class="org.springframework.jms.connection.SingleConnectionFactory" depends-on="alertsConnectionFactoryTCP" destroy-method="destroy">
+	    <constructor-arg ref="alertsConnectionFactoryTCP" />
+	</bean>
+	
+	the pubSubDomain should be true if we need to send to topic, false if we need to send to a queue 
+	this jmsTemplate is used to send message to topics
+	<bean id="alertsTopicJmsTemplateTCP" class="org.springframework.jms.core.JmsTemplate" depends-on="alertsSingleConnectionFactoryTCP">
+		<property name="connectionFactory" ref="alertsSingleConnectionFactoryTCP" />
+		<property name="pubSubDomain" value="true"/>
+		<property name="deliveryPersistent" value="false"/>
+		<property name="explicitQosEnabled" value="true"/>
+	</bean>
+	
+	
+	the activeMQ connection factory
+	
+	the SingleConnectionFactory is used to create non cached sessions
+	<bean id="alertsSingleConnectionFactoryVM" class="org.springframework.jms.connection.SingleConnectionFactory" depends-on="alertsConnectionFactoryVM" destroy-method="destroy">
+	    <constructor-arg ref="alertsConnectionFactoryVM" />
+	</bean> -->
+	
+	
+	<!-- this jmsTemplate is used to send message to queues -->
+
+	<!-- the executor factory bean should be called from the alerts engine to start scheduling the alert's task -->	
+
+	<!-- the scheduled executor task will create a task of type MethodInvokingRunnable -->
+	   
+</beans>

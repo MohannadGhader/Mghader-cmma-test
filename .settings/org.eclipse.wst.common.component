@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="omni_services">
+        <wb-resource deploy-path="/" source-path="/WebContent"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/resources_omni_services"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/omni_services_common_src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/omni_services_common_resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/omni_webservices_common_src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/omni_webservices_resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/library_src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/service_client_common_resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/services_common"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/service_client_common_src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/library_src_ext"/>
+        <property name="java-output-path" value="/omni_services/build/classes"/>
+        <property name="context-root" value="omni_services"/>
+    </wb-module>
+</project-modules>
